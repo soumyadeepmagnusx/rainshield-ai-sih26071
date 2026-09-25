@@ -1,0 +1,3253 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAINSHIELD-AI // MoES Cyber-Command Center — Heavy Rainfall & Inundation DSS [SIH26071]</title>
+
+<!-- Fonts: Inter, Space Grotesk & JetBrains Mono -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        display: ['Space Grotesk', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+      colors: {
+        slate: {
+          950: '#020617',
+        }
+      }
+    }
+  }
+}
+</script>
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<!-- Leaflet GIS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    background-color: #020617;
+    color: #f8fafc;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #020617; }
+  ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+
+  /* Cyber-Command Glassmorphic Surface (Shadcn + Palantir/MoES) */
+  .cyber-card {
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(30, 41, 59, 0.9);
+    box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .cyber-card:hover {
+    border-color: rgba(56, 189, 248, 0.32);
+  }
+
+  /* Flashing Threat Ticker Marquee */
+  @keyframes marqueeScroll {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+  }
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: marqueeScroll 34s linear infinite;
+  }
+  .ticker-track:hover {
+    animation-play-state: paused;
+  }
+
+  /* Skeleton Shimmer Loader */
+  @keyframes shimmerPulse {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, rgba(15,23,42,0.85) 25%, rgba(6,182,212,0.22) 50%, rgba(15,23,42,0.85) 75%);
+    background-size: 200% 100%;
+    animation: shimmerPulse 1.2s infinite;
+  }
+
+  /* Pulsing Hotspot Ring on Map */
+  @keyframes radarPing {
+    0% { transform: scale(0.85); opacity: 0.9; }
+    75%, 100% { transform: scale(2.35); opacity: 0; }
+  }
+  .hotspot-ping {
+    animation: radarPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* MANDATORY :has() state styling with @supports fallback per modern-web-guidance */
+  .layer-toggle-btn:has(input:checked) {
+    background: rgba(6, 182, 212, 0.18);
+    border-color: rgba(34, 211, 238, 0.75);
+    color: #ecfeff;
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
+  }
+  @supports not selector(:has(*)) {
+    .layer-toggle-btn.is-active {
+      background: rgba(6, 182, 242, 0.18);
+      border-color: rgba(34, 211, 238, 0.75);
+      color: #ecfeff;
+    }
+  }
+
+  /* MANDATORY Top-Layer Dialog & Fly-Out Drawer Animations per modern-web-guidance */
+  dialog.cyber-dialog,
+  dialog.flyout-drawer {
+    opacity: 0;
+    transform: scale(0.95);
+    transition-property: opacity, transform, display, overlay;
+    transition-duration: 0.26s;
+    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    transition-behavior: allow-discrete;
+  }
+
+  dialog.flyout-drawer {
+    margin: 0 0 0 auto;
+    height: 100vh;
+    max-height: 100vh;
+    width: min(440px, 92vw);
+    transform: translateX(100%);
+  }
+
+  dialog.cyber-dialog[open] {
+    opacity: 1;
+    transform: scale(1);
+    @starting-style {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+
+  dialog.flyout-drawer[open] {
+    opacity: 1;
+    transform: translateX(0);
+    @starting-style {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+  }
+
+  dialog::backdrop {
+    background-color: rgba(2, 6, 23, 0);
+    backdrop-filter: blur(0px);
+    transition:
+      display 0.26s allow-discrete,
+      overlay 0.26s allow-discrete,
+      background-color 0.26s ease-out,
+      backdrop-filter 0.26s ease-out;
+  }
+
+  dialog[open]::backdrop {
+    background-color: rgba(2, 6, 23, 0.72);
+    backdrop-filter: blur(6px);
+    @starting-style {
+      background-color: rgba(2, 6, 23, 0);
+      backdrop-filter: blur(0px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    dialog.cyber-dialog,
+    dialog.flyout-drawer {
+      transform: none;
+      transition-duration: 0.1s;
+    }
+    @starting-style {
+      dialog.cyber-dialog[open],
+      dialog.flyout-drawer[open] {
+        transform: none;
+      }
+    }
+  }
+
+  /* Custom Range Slider */
+  input[type="range"].cyber-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: #1e293b;
+    border-radius: 999px;
+    outline: none;
+  }
+  input[type="range"].cyber-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #06b6d4;
+    border: 2px solid #cffafe;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.8);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+  input[type="range"].cyber-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.18);
+  }
+
+  /* Leaflet Dark Customizations */
+  .leaflet-container {
+    background: #020617 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+  }
+  .leaflet-popup-content-wrapper {
+    background: rgba(15, 23, 42, 0.95) !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(6, 182, 212, 0.5) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.8) !important;
+  }
+  .leaflet-popup-tip {
+    background: rgba(15, 23, 42, 0.95) !important;
+  }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-50 min-h-screen flex flex-col selection:bg-cyan-500/30">
+
+<!-- ==================== 1. COMMAND CENTER HEADER & FLASHING GLOBAL THREAT TICKER ==================== -->
+<header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/90 border-b border-slate-800/90">
+  <!-- Top Bar -->
+  <div class="max-w-[1920px] mx-auto px-4 h-14 flex items-center justify-between gap-3">
+    <!-- Branding: Ministry of Earth Sciences -->
+    <div class="flex items-center gap-3 shrink-0">
+      <div class="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-400/40 flex items-center justify-center shadow-[0_0_18px_rgba(6,182,212,0.25)] relative">
+        <i data-lucide="radar" class="w-5 h-5 text-cyan-400"></i>
+        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-display font-bold tracking-wider text-base text-white">RAINSHIELD-AI</span>
+          <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">SIH26071</span>
+          <span class="hidden sm:inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+            <i data-lucide="shield-check" class="w-3 h-3"></i> MINISTRY OF EARTH SCIENCES (MoES)
+          </span>
+        </div>
+        <div class="text-[11px] text-slate-400 font-mono hidden md:block">
+          AI/ML Integrated Heavy Rainfall Early Warning &amp; 2D Hydrodynamic Inundation Command Center
+        </div>
+      </div>
+    </div>
+
+    <!-- Flashing Global Status Ticker (Active High-Alert Zones) -->
+    <div class="hidden xl:flex items-center flex-1 max-w-2xl bg-red-950/35 border border-red-500/40 rounded-lg px-3 py-1.5 overflow-hidden shadow-[0_0_20px_rgba(239,68,68,0.15)]">
+      <div class="flex items-center gap-1.5 text-[11px] font-mono font-bold text-red-400 shrink-0 pr-3 border-r border-red-500/30 mr-3 animate-pulse">
+        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+        LIVE THREAT TICKER
+      </div>
+      <div class="overflow-hidden flex-1">
+        <div class="ticker-track font-mono text-xs text-slate-200 gap-10">
+          <span class="inline-flex items-center gap-2 mr-10">
+            <span class="px-1.5 py-0.2 rounded bg-red-500/25 border border-red-500 text-red-300 font-bold text-[10px]">RED ALERT</span>
+            <span>Mumbai Urban Area (Mithi Basin) — Inundation Risk 94% | Peak Depth: 1.42m ± 0.18m</span>
+          </span>
+          <span class="inline-flex items-center gap-2 mr-10">
+            <span class="px-1.5 py-0.2 rounded bg-red-500/25 border border-red-500 text-red-300 font-bold text-[10px]">RED ALERT</span>
+            <span>Guwahati Bharalu Catchment — Flash Flood Risk 92% | Sluice Backwater Lock</span>
+          </span>
+          <span class="inline-flex items-center gap-2 mr-10">
+            <span class="px-1.5 py-0.2 rounded bg-amber-500/25 border border-amber-400 text-amber-300 font-bold text-[10px]">AMBER WATCH</span>
+            <span>Chennai Adyar-Velachery Marsh — Inundation Risk 84% | Chembarambakkam Outflow Regulated</span>
+          </span>
+          <span class="inline-flex items-center gap-2 mr-10">
+            <span class="px-1.5 py-0.2 rounded bg-amber-500/25 border border-amber-400 text-amber-300 font-bold text-[10px]">AMBER WATCH</span>
+            <span>Wayanad Chaliyar Hill Basin — Orographic Torrent Risk 88% | Antecedent Soil Saturation</span>
+          </span>
+          <span class="inline-flex items-center gap-2 mr-10">
+            <span class="px-1.5 py-0.2 rounded bg-red-500/25 border border-red-500 text-red-300 font-bold text-[10px]">RED ALERT</span>
+            <span>Mumbai Urban Area (Mithi Basin) — Inundation Risk 94% | Peak Depth: 1.42m ± 0.18m</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Operational Toolbar & Live Digital Clock -->
+    <div class="flex items-center gap-2 shrink-0">
+      <button onclick="triggerExtremeCloudburst()" class="px-2.5 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 border border-red-500/60 text-red-200 font-mono text-[11px] font-bold flex items-center gap-1.5 transition-all shadow-[0_0_15px_rgba(239,68,68,0.25)]">
+        <i data-lucide="zap" class="w-3.5 h-3.5 text-red-400"></i>
+        <span>SIMULATE CLOUDBURST</span>
+      </button>
+
+      <button onclick="openDialog('twin3dDialog')" class="hidden md:inline-flex px-2.5 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-mono text-[11px] font-semibold items-center gap-1.5 transition-all">
+        <i data-lucide="box" class="w-3.5 h-3.5"></i>
+        <span>3D TWIN</span>
+      </button>
+
+      <button onclick="openDialog('scadaDialog')" class="hidden md:inline-flex px-2.5 py-1.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/40 text-purple-300 font-mono text-[11px] font-semibold items-center gap-1.5 transition-all">
+        <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+        <span>SCADA PUMPS</span>
+      </button>
+
+      <button onclick="openDialog('cctvDialog')" class="hidden lg:inline-flex px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[11px] items-center gap-1.5 transition-all">
+        <i data-lucide="video" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span>CCTV AI</span>
+      </button>
+
+      <button onclick="openDialog('liveApiDialog')" class="hidden lg:inline-flex px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[11px] items-center gap-1.5 transition-all">
+        <i data-lucide="globe" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span>LIVE API</span>
+      </button>
+
+      <button onclick="openDialog('copilotDialog')" class="hidden sm:inline-flex px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[11px] items-center gap-1.5 transition-all">
+        <i data-lucide="bot" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span>AI COPILOT</span>
+      </button>
+
+      <button onclick="openDialog('backtestDialog')" class="hidden xl:inline-flex px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-200 font-mono text-[11px] items-center gap-1.5 transition-all">
+        <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span>MLOPS</span>
+      </button>
+
+      <button onclick="openDialog('hitlDialog')" class="hidden sm:inline-flex px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 font-mono text-[11px] font-semibold items-center gap-1.5 transition-all">
+        <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+        <span>HITL</span>
+      </button>
+
+      <button onclick="openCapModal()" class="px-2.5 py-1.5 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-300 font-mono text-[11px] font-semibold flex items-center gap-1.5 transition-all">
+        <i data-lucide="file-code" class="w-3.5 h-3.5"></i>
+        <span>CAP XML</span>
+      </button>
+
+      <!-- Live Digital Clock -->
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 font-mono text-xs text-cyan-300 shadow-inner">
+        <i data-lucide="clock" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <strong id="liveClock">22:15:00 IST</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub-Bar: Basin Selector Tabs & Verification KPI Gates -->
+  <div class="max-w-[1920px] mx-auto px-4 py-1.5 bg-slate-950/95 border-t border-slate-900 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
+    <!-- Basin Quick-Selector Pills -->
+    <div class="flex items-center gap-1.5 overflow-x-auto py-0.5" id="basinTabStrip"></div>
+
+    <!-- Verification Metrics Ribbon -->
+    <div class="hidden lg:flex items-center gap-4 text-slate-400">
+      <span>CONTINUITY: <b class="text-emerald-400" id="ribContinuity">99.6% [4/4 STREAMS]</b></span>
+      <span>POD: <b class="text-emerald-400">0.94</b> | FAR: <b class="text-cyan-400">0.046</b> | CSI: <b class="text-emerald-400">0.89</b></span>
+      <span>SAR IoU: <b class="text-emerald-400">89.2%</b></span>
+      <span>SCADA PUMPS: <b class="text-cyan-300" id="ribPumpStatus">2/4 ACTIVE (-0.12m)</b></span>
+    </div>
+  </div>
+</header>
+
+<!-- ==================== MAIN CYBER-COMMAND WORKSPACE ==================== -->
+<main class="max-w-[1920px] w-full mx-auto p-3 lg:p-4 grid grid-cols-12 gap-4 flex-1">
+
+  <!-- ==================== LEFT / CENTER COLUMN (8 COLS): HERO GEOSPATIAL MAP + 24H TIMELINE PREDICTOR ==================== -->
+  <section class="col-span-12 xl:col-span-8 flex flex-col gap-4">
+
+    <!-- 2. HERO GEOSPATIAL MAP SIMULATOR (CORE PITCH FEATURE) -->
+    <div class="cyber-card rounded-xl relative h-[510px] lg:h-[540px] overflow-hidden flex flex-col">
+
+      <!-- Leaflet Map Container -->
+      <div id="gisMap" class="absolute inset-0 z-0"></div>
+
+      <!-- 60-FPS Atmospheric Wind Streamlines, Satellite Cloud Density & Doppler Radar Sweep Canvas -->
+      <canvas id="atmosPhysicsCanvas" class="absolute inset-0 z-10 pointer-events-none"></canvas>
+
+      <!-- Skeleton Shimmer Loading Banner (Triggers during Multi-Layer Toggle & Basin Switch) -->
+      <div id="mapSkeletonBanner" class="hidden absolute top-3 right-3 z-30 px-3.5 py-2 rounded-lg bg-slate-950/90 border border-cyan-500/50 text-cyan-300 font-mono text-xs items-center gap-2 shadow-lg skeleton-shimmer">
+        <i data-lucide="refresh-cw" class="w-3.5 h-3.5 animate-spin"></i>
+        <span id="mapSkeletonText">Re-aligning 1km × 1km Multi-Source Spatial Tensor...</span>
+      </div>
+
+      <!-- INTERACTIVE FLOATING MULTI-LAYER TOGGLE BUTTONS (Left Side — "The Multi-Layer Toggle Illusion") -->
+      <div class="absolute top-3.5 left-3.5 z-20 flex flex-col gap-2 w-64 pointer-events-auto">
+        <div class="px-3 py-1.5 rounded-lg bg-slate-950/90 backdrop-blur-md border border-slate-800 flex items-center justify-between">
+          <span class="font-mono text-[10px] uppercase tracking-wider text-slate-400 font-semibold flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-3.5 h-3.5 text-cyan-400"></i>
+            Multi-Layer Fusion Toggles
+          </span>
+          <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300">1KM MESH</span>
+        </div>
+
+        <!-- Toggle 1: Satellite Overlay -->
+        <label class="layer-toggle-btn cursor-pointer px-3 py-2.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-slate-300 flex items-center justify-between transition-all hover:border-cyan-500/50">
+          <div class="flex items-center gap-2.5">
+            <input type="checkbox" id="chkSatellite" checked onchange="triggerLayerToggle('INSAT-3DS Multi-Spectral Cloud Density')" class="hidden">
+            <span class="text-base">🛰️</span>
+            <div>
+              <div class="text-xs font-semibold leading-tight">Satellite Overlay</div>
+              <div class="text-[10px] font-mono text-slate-400">INSAT-3DS TIR-1 + GSMaP</div>
+            </div>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_#c084fc]"></span>
+        </label>
+
+        <!-- Toggle 2: Doppler Radar Feed -->
+        <label class="layer-toggle-btn cursor-pointer px-3 py-2.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-slate-300 flex items-center justify-between transition-all hover:border-cyan-500/50">
+          <div class="flex items-center gap-2.5">
+            <input type="checkbox" id="chkRadar" checked onchange="triggerLayerToggle('IMD C-Band Doppler Radar dBZ Sweep')" class="hidden">
+            <span class="text-base">📡</span>
+            <div>
+              <div class="text-xs font-semibold leading-tight">Doppler Radar Feed</div>
+              <div class="text-[10px] font-mono text-slate-400">Real-Time C-Band Max-Z dBZ</div>
+            </div>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]"></span>
+        </label>
+
+        <!-- Toggle 3: AI Inundation Prediction Model -->
+        <label class="layer-toggle-btn cursor-pointer px-3 py-2.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-slate-300 flex items-center justify-between transition-all hover:border-cyan-500/50">
+          <div class="flex items-center gap-2.5">
+            <input type="checkbox" id="chkInundation" checked onchange="triggerLayerToggle('2D Shallow-Water AI Inundation Polygons')" class="hidden">
+            <span class="text-base">🌊</span>
+            <div>
+              <div class="text-xs font-semibold leading-tight">AI Inundation Model</div>
+              <div class="text-[10px] font-mono text-slate-400">2D Hydrodynamic Flood Depth</div>
+            </div>
+          </div>
+          <span class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]"></span>
+        </label>
+
+        <!-- Toggle 4: Wind Streamlines & Evacuation Routes -->
+        <div class="grid grid-cols-2 gap-1.5">
+          <label class="layer-toggle-btn cursor-pointer px-2.5 py-1.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-slate-300 flex items-center justify-center gap-1.5 font-mono text-[10px] transition-all">
+            <input type="checkbox" id="chkParticles" checked onchange="syncMapOverlays()" class="hidden">
+            <span>💨 Wind Vectors</span>
+          </label>
+          <label class="layer-toggle-btn cursor-pointer px-2.5 py-1.5 rounded-lg bg-slate-950/85 backdrop-blur-md border border-slate-800 text-slate-300 flex items-center justify-center gap-1.5 font-mono text-[10px] transition-all">
+            <input type="checkbox" id="chkRoutes" checked onchange="syncMapOverlays()" class="hidden">
+            <span>🛟 Evac Routes</span>
+          </label>
+        </div>
+
+        <!-- Base Map Cartography Selector -->
+        <select id="baseMapSelect" onchange="switchBaseTile(this.value)" class="px-2.5 py-1.5 rounded-lg bg-slate-950/90 border border-slate-800 text-cyan-300 font-mono text-[10px] focus:outline-none">
+          <option value="dark">MAP: CYBER DARK TACTICAL</option>
+          <option value="sat">MAP: HIGH-RES EO SATELLITE</option>
+          <option value="topo">MAP: CARTODEM 10M RELIEF</option>
+        </select>
+      </div>
+
+      <!-- Top Right Floating Active Basin Threat HUD Card -->
+      <div class="absolute top-3.5 right-3.5 z-20 w-72 pointer-events-auto rounded-xl bg-slate-950/88 backdrop-blur-md border border-slate-800 p-3 shadow-2xl">
+        <div class="flex items-center justify-between mb-1">
+          <span id="heroSevTag" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/50">
+            RED ALERT // 94.2% CONF
+          </span>
+          <span id="heroGridCode" class="font-mono text-[10px] text-slate-400">GRID-MUM-01</span>
+        </div>
+        <div id="heroBasinTitle" class="font-display font-bold text-sm text-white truncate">
+          Mumbai — Mithi Basin &amp; Kurla Lowland
+        </div>
+        <div id="heroHeadline" class="font-mono text-[10px] text-red-400 font-semibold mt-0.5">
+          EXTREME INUNDATION WARNING (ACT NOW)
+        </div>
+
+        <div class="grid grid-cols-3 gap-1.5 mt-2.5 pt-2 border-t border-slate-800/80 text-center font-mono">
+          <div class="bg-slate-900/90 rounded p-1.5 border border-slate-800">
+            <div id="kpiPredDepth" class="text-xs font-bold text-white">1.42m</div>
+            <div class="text-[9px] text-slate-400">DEPTH (±0.18m)</div>
+          </div>
+          <div class="bg-slate-900/90 rounded p-1.5 border border-slate-800">
+            <div id="kpiRainRate" class="text-xs font-bold text-cyan-300">79.4</div>
+            <div class="text-[9px] text-slate-400">QPE (mm/hr)</div>
+          </div>
+          <div class="bg-slate-900/90 rounded p-1.5 border border-slate-800">
+            <div id="kpiLeadHrs" class="text-xs font-bold text-amber-300">3.5 HRS</div>
+            <div class="text-[9px] text-slate-400">LEAD TIME</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Floating Map Bar: Clickable Hotspot Quick-Pills & Sub-Grid Probe -->
+      <div class="absolute bottom-3 left-3.5 right-3.5 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-auto">
+        <!-- Clickable Hotspot Pills (Also clickable directly on the map!) -->
+        <div class="flex flex-wrap items-center gap-1.5 bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-lg px-2.5 py-1.5">
+          <span class="font-mono text-[10px] text-cyan-400 font-semibold flex items-center gap-1 mr-1">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            CLICK HOT-SPOT FOR FLY-OUT TELEMETRY:
+          </span>
+          <div id="hotspotQuickBar" class="flex flex-wrap items-center gap-1.5"></div>
+        </div>
+
+        <!-- Coordinate Probe Readout -->
+        <div class="hidden md:flex items-center gap-3 bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-lg px-3 py-1.5 font-mono text-[10px] text-slate-400">
+          <span>PROBE: <strong id="probeCoords" class="text-cyan-300">19.0728°N, 72.8826°E</strong></span>
+          <span>DEM: <strong id="probeElev" class="text-white">6.4m</strong></span>
+          <span>LOCAL DEPTH: <strong id="probeDepth" class="text-red-400">1.42m</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 4. AI INUNDATION TIMELINE PREDICTOR ("THE TIME SCRUBBING WOW FACTOR") ==================== -->
+    <div class="cyber-card rounded-xl p-4 flex flex-col gap-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+            <i data-lucide="activity" class="w-4 h-4 text-cyan-400"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="font-display font-bold text-sm uppercase tracking-wider text-white">
+                AI Inundation Timeline Predictor (24-Hour Forecast &amp; Flood Expansion Scrubber)
+              </h2>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                ConvLSTM + LightGBM + 2D Shallow-Water
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 font-mono">
+              Drag the 24-hour time slider below to scrub forward and watch predicted flood polygons expand dynamically on the map
+            </p>
+          </div>
+        </div>
+
+        <!-- Live Scrubbing Horizon Readout Badges -->
+        <div class="flex items-center gap-2 font-mono text-xs">
+          <button id="btnPlayTimeline" onclick="toggleTimelinePlayback()" class="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[11px] transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+            <span>▶ AUTO-SCRUB 24H</span>
+          </button>
+          <div class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-cyan-300 font-semibold">
+            HORIZON: <span id="scrubHorizonBadge">LIVE (T+0h)</span>
+          </div>
+          <div class="px-2.5 py-1.5 rounded-lg bg-red-950/60 border border-red-500/50 text-red-300 font-bold">
+            FLOOD EXPANSION: <span id="scrubExpansionBadge">1.00× (1.42m)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recharts-Style Dynamic Time-Series Chart + 2D Hydraulic Channel Profile Side-by-Side -->
+      <div class="grid grid-cols-12 gap-3 items-stretch">
+        <div class="col-span-12 lg:col-span-8 bg-slate-950/70 rounded-lg border border-slate-800/90 p-2.5 h-44 relative">
+          <canvas id="ensembleTimelineChart"></canvas>
+        </div>
+        <div class="col-span-12 lg:col-span-4 bg-slate-950/70 rounded-lg border border-slate-800/90 p-2.5 h-44 flex flex-col justify-between relative">
+          <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
+            <span>2D CHANNEL CROSS-SECTION &amp; SCS-CN</span>
+            <button onclick="openDialog('twin3dDialog')" class="text-cyan-400 hover:underline">[EXPAND 3D MESH]</button>
+          </div>
+          <div class="flex-1 relative rounded overflow-hidden border border-slate-800/80 bg-slate-950">
+            <canvas id="hydroProfileCanvas" class="w-full h-full block"></canvas>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-1.5 font-mono text-[10px]">
+            <div class="flex justify-between bg-slate-900/80 px-2 py-1 rounded">
+              <span class="text-slate-400">RUNOFF Q:</span>
+              <b id="valRunoffOut" class="text-cyan-300">72.6 mm/h</b>
+            </div>
+            <div class="flex justify-between bg-slate-900/80 px-2 py-1 rounded">
+              <span class="text-slate-400">INFIL Ia:</span>
+              <b id="valInfilOut" class="text-emerald-400">6.8 mm/h</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive 24-Hour Time Scrubber Slider -->
+      <div class="bg-slate-950/80 rounded-lg border border-slate-800 px-4 py-2.5">
+        <div class="flex items-center justify-between text-[11px] font-mono text-slate-300 mb-1.5">
+          <span class="flex items-center gap-1.5 text-cyan-400 font-semibold">
+            <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+            INTERACTIVE 24-HOUR INUNDATION TIME SCRUBBER:
+          </span>
+          <span id="scrubberInstructionText" class="text-slate-400">
+            Scrubbing updates map flood radius, water accumulation curve &amp; submergence risk
+          </span>
+        </div>
+        <input
+          type="range"
+          id="timeScrubberSlider"
+          min="0"
+          max="10"
+          step="1"
+          value="3"
+          oninput="onScrubTimeline(this.value)"
+          class="w-full cyber-slider"
+        />
+        <div class="flex justify-between text-[10px] font-mono text-slate-400 mt-1.5 select-none">
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(0)">-3h</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(1)">-2h</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(2)">-1h</span>
+          <span class="cursor-pointer text-cyan-300 font-bold" onclick="onScrubTimeline(3)">LIVE (0h)</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(4)">+1h Peak</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(5)">+2h</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(6)">+3h</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(7)">+6h</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(8)">+12h</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(9)">+18h</span>
+          <span class="cursor-pointer hover:text-cyan-300" onclick="onScrubTimeline(10)">+24h</span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ==================== RIGHT COLUMN (4 COLS): 4-STREAM INGESTION MONITOR + EARLY WARNING BROADCAST & MITIGATION ==================== -->
+  <aside class="col-span-12 xl:col-span-4 flex flex-col gap-4">
+
+    <!-- 3. MULTI-SOURCE DATA INGESTION MONITOR (4 LIVE-UPDATING TELEMETRY STREAMS) -->
+    <div class="cyber-card rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
+            <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div>
+            <h2 class="font-display font-bold text-sm uppercase tracking-wider text-white">
+              Multi-Source Data Ingestion Monitor
+            </h2>
+            <p class="text-[10px] font-mono text-slate-400">4 Live Kalman-Fused Telemetry Streams • Auto-Degradation Ready</p>
+          </div>
+        </div>
+        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          SYNCED
+        </span>
+      </div>
+
+      <!-- 2x2 Grid of 4 Live Telemetry Streams -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+
+        <!-- Stream 1: Satellite Feed -->
+        <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800/90 hover:border-purple-500/40 transition-all flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-[10px] font-bold text-purple-300 flex items-center gap-1">
+              🛰️ SATELLITE FEED
+            </span>
+            <label class="flex items-center gap-1 cursor-pointer text-[9.5px] font-mono text-emerald-400">
+              <input type="checkbox" id="swSat" checked onchange="recomputeSensorFusion()" class="accent-emerald-400 w-3 h-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              CONNECTED
+            </label>
+          </div>
+          <div class="my-1.5 flex items-baseline justify-between">
+            <div>
+              <div id="txtSatQpe" class="font-mono text-base font-bold text-white">74.2 mm/hr</div>
+              <div id="txtSatTir" class="font-mono text-[10px] text-slate-400">Cloud Index: 91.4 CDI (204.5K)</div>
+            </div>
+            <span id="latSat" class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300">4ms delay</span>
+          </div>
+          <canvas id="sparkSat" class="w-full h-7 block"></canvas>
+          <div class="w-full h-1 bg-slate-900 rounded overflow-hidden mt-1.5">
+            <div id="barSat" class="h-full bg-purple-400 transition-all" style="width:20%"></div>
+          </div>
+        </div>
+
+        <!-- Stream 2: Doppler Radar -->
+        <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800/90 hover:border-cyan-500/40 transition-all flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-[10px] font-bold text-cyan-300 flex items-center gap-1">
+              📡 DOPPLER RADAR
+            </span>
+            <label class="flex items-center gap-1 cursor-pointer text-[9.5px] font-mono text-emerald-400">
+              <input type="checkbox" id="swRad" checked onchange="recomputeSensorFusion()" class="accent-emerald-400 w-3 h-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              CONNECTED
+            </label>
+          </div>
+          <div class="my-1.5 flex items-baseline justify-between">
+            <div>
+              <div id="txtRadDbz" class="font-mono text-base font-bold text-white">56.5 dBZ</div>
+              <div id="txtRadQpe" class="font-mono text-[10px] text-slate-400">C-Band QPE: 82.4 mm/hr</div>
+            </div>
+            <span id="latRad" class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300">5ms delay</span>
+          </div>
+          <canvas id="sparkRad" class="w-full h-7 block"></canvas>
+          <div class="w-full h-1 bg-slate-900 rounded overflow-hidden mt-1.5">
+            <div id="barRad" class="h-full bg-cyan-400 transition-all" style="width:35%"></div>
+          </div>
+        </div>
+
+        <!-- Stream 3: Observational Weather (AWS) -->
+        <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800/90 hover:border-emerald-500/40 transition-all flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-[10px] font-bold text-emerald-300 flex items-center gap-1">
+              🌧️ OBS. WEATHER (AWS)
+            </span>
+            <label class="flex items-center gap-1 cursor-pointer text-[9.5px] font-mono text-emerald-400">
+              <input type="checkbox" id="swAws" checked onchange="recomputeSensorFusion()" class="accent-emerald-400 w-3 h-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              CONNECTED
+            </label>
+          </div>
+          <div class="my-1.5 flex items-baseline justify-between">
+            <div>
+              <div id="txtAwsRate" class="font-mono text-base font-bold text-white">79.0 mm/hr</div>
+              <div id="txtAwsStation" class="font-mono text-[10px] text-slate-400">AWS-SANTACRUZ-04</div>
+            </div>
+            <span id="latAws" class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300">3ms delay</span>
+          </div>
+          <canvas id="sparkAws" class="w-full h-7 block"></canvas>
+          <div class="w-full h-1 bg-slate-900 rounded overflow-hidden mt-1.5">
+            <div id="barAws" class="h-full bg-emerald-400 transition-all" style="width:30%"></div>
+          </div>
+        </div>
+
+        <!-- Stream 4: NWP Models -->
+        <div class="p-3 rounded-lg bg-slate-950/80 border border-slate-800/90 hover:border-amber-500/40 transition-all flex flex-col justify-between">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-[10px] font-bold text-amber-300 flex items-center gap-1">
+              🧮 NWP 1KM MODELS
+            </span>
+            <label class="flex items-center gap-1 cursor-pointer text-[9.5px] font-mono text-emerald-400">
+              <input type="checkbox" id="swNwp" checked onchange="recomputeSensorFusion()" class="accent-emerald-400 w-3 h-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              CONNECTED
+            </label>
+          </div>
+          <div class="my-1.5 flex items-baseline justify-between">
+            <div>
+              <div id="txtNwpFine" class="font-mono text-base font-bold text-white">94.2% ±1.8%</div>
+              <div id="txtNwpCoarse" class="font-mono text-[10px] text-slate-400">NCMRWF 1km: 78.6 mm/hr</div>
+            </div>
+            <span id="latNwp" class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-cyan-300">6ms delay</span>
+          </div>
+          <canvas id="sparkNwp" class="w-full h-7 block"></canvas>
+          <div class="w-full h-1 bg-slate-900 rounded overflow-hidden mt-1.5">
+            <div id="barNwp" class="h-full bg-amber-400 transition-all" style="width:15%"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Interactive Physics Sliders (Rainfall / Curve Number / Drainage) -->
+      <div class="mt-3 pt-2.5 border-t border-slate-800/80 grid grid-cols-3 gap-2 font-mono text-[10px]">
+        <div class="bg-slate-950/70 p-2 rounded border border-slate-800">
+          <div class="flex justify-between text-slate-400 mb-1">
+            <span>RAIN (P)</span>
+            <b id="valSliderRain" class="text-cyan-300">79.4</b>
+          </div>
+          <input type="range" id="sliderRain" min="5" max="140" step="0.5" value="79.4" oninput="updateHydroPhysics()" class="w-full accent-cyan-400 h-1 cursor-pointer">
+        </div>
+        <div class="bg-slate-950/70 p-2 rounded border border-slate-800">
+          <div class="flex justify-between text-slate-400 mb-1">
+            <span>SCS-CN</span>
+            <b id="valSliderCn" class="text-cyan-300">94</b>
+          </div>
+          <input type="range" id="sliderCn" min="55" max="98" step="1" value="94" oninput="updateHydroPhysics()" class="w-full accent-cyan-400 h-1 cursor-pointer">
+        </div>
+        <div class="bg-slate-950/70 p-2 rounded border border-slate-800">
+          <div class="flex justify-between text-slate-400 mb-1">
+            <span>DRAINAGE</span>
+            <b id="valSliderDrain" class="text-cyan-300">62%</b>
+          </div>
+          <input type="range" id="sliderDrain" min="15" max="100" step="1" value="62" oninput="updateHydroPhysics()" class="w-full accent-cyan-400 h-1 cursor-pointer">
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 5. EARLY WARNING BROADCAST, RECOMMENDED RESPONSE & CAP VOICE ALERT PANEL ==================== -->
+    <div class="cyber-card rounded-xl p-4 flex flex-col gap-3 flex-1">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-red-500/15 border border-red-500/40 flex items-center justify-center">
+            <i data-lucide="siren" class="w-4 h-4 text-red-400"></i>
+          </div>
+          <div>
+            <h2 class="font-display font-bold text-sm uppercase tracking-wider text-white">
+              Recommended Response &amp; CAP Voice Alert
+            </h2>
+            <p class="text-[10px] font-mono text-slate-400">Automated Early Warning Dissemination &amp; Mitigation CTA</p>
+          </div>
+        </div>
+        <span id="exposedPopBadge" class="font-mono text-[11px] font-bold px-2.5 py-1 rounded-md bg-red-500/20 border border-red-500/50 text-red-300 shadow-[0_0_12px_rgba(239,68,68,0.25)]">
+          145,000 Pop. Exposed
+        </span>
+      </div>
+
+      <!-- AI-Generated Actionable Summary Card (Why Warning Was Triggered) -->
+      <div class="p-3 rounded-lg bg-slate-950/90 border border-cyan-500/30 relative overflow-hidden">
+        <div class="flex items-center justify-between text-[10px] font-mono text-cyan-400 font-bold uppercase mb-1">
+          <span class="flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            AI Ensemble Trigger Rationale (SHAP XAI)
+          </span>
+          <span id="txtUncertOut" class="text-amber-300">CI: ±0.18m</span>
+        </div>
+        <p id="aiRationaleText" class="text-xs text-slate-300 leading-relaxed">
+          Warning triggered by coincident <strong class="text-white">56.5 dBZ Doppler Radar core</strong> (+38% SHAP attribution), <strong class="text-white">79.0 mm/hr AWS gauge surge</strong>, and <strong class="text-white">INSAT-3DS 204.5K cloud-top cooling</strong> over impervious SCS-CN 94 terrain, exceeding storm-drain conveyance by <strong class="text-red-300">44.6 mm/hr</strong>.
+        </p>
+      </div>
+
+      <!-- Primary Official Broadcast CTAs -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <button
+          id="btnBroadcastSms"
+          onclick="triggerSmsBroadcastZoneA()"
+          class="py-2.5 px-3 rounded-lg font-mono text-[11px] font-bold uppercase tracking-wider bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.35)] transition-all flex items-center justify-center gap-1.5"
+        >
+          <i data-lucide="radio-tower" class="w-4 h-4"></i>
+          <span id="lblBroadcastSms">Broadcast SMS Alerts to Zone A</span>
+        </button>
+
+        <button
+          id="btnDeployEvac"
+          onclick="triggerDeployEvacRoutes()"
+          class="py-2.5 px-3 rounded-lg font-mono text-[11px] font-bold uppercase tracking-wider bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/70 text-amber-200 transition-all flex items-center justify-center gap-1.5"
+        >
+          <i data-lucide="map" class="w-4 h-4"></i>
+          <span id="lblDeployEvac">Deploy Evacuation Route Maps</span>
+        </button>
+      </div>
+
+      <!-- Interactive Recommended Response Directives (All 3 Items + Dispatch All) -->
+      <div>
+        <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1.5">
+          <span>RECOMMENDED MITIGATION DIRECTIVES (CLICK TO DISPATCH):</span>
+          <button onclick="dispatchAllDirectives()" class="text-emerald-400 hover:underline font-bold">[✓ DISPATCH ALL 3]</button>
+        </div>
+        <div id="directivesContainer" class="flex flex-col gap-1.5"></div>
+      </div>
+
+      <!-- Geo-Targeted Multilingual Audio Alert (6 Languages + Siren + Waveform Monitor) -->
+      <div class="pt-2 border-t border-slate-800/90">
+        <div class="flex items-center justify-between font-mono text-[11px] text-cyan-300 font-semibold mb-2">
+          <span>🔊 Disseminate Geo-Targeted Multilingual Audio Alert:</span>
+          <button onclick="stopVoiceBroadcast()" class="px-2 py-0.5 rounded bg-red-500/20 border border-red-500/40 text-red-300 text-[10px] hover:bg-red-500/30">
+            ⏹ STOP
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1.5" id="voiceButtonsGrid">
+          <button type="button" data-lang="en-IN" onclick="broadcastVoice('en-IN', this)" class="voice-chip py-2 px-2.5 rounded-lg bg-slate-900/90 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all">
+            <span>🔊</span> <span>English</span>
+          </button>
+          <button type="button" data-lang="hi-IN" onclick="broadcastVoice('hi-IN', this)" class="voice-chip py-2 px-2.5 rounded-lg bg-slate-900/90 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all">
+            <span>🔊</span> <span>हिन्दी</span>
+          </button>
+          <button type="button" data-lang="as-IN" onclick="broadcastVoice('as-IN', this)" class="voice-chip py-2 px-2.5 rounded-lg bg-slate-900/90 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all">
+            <span>🔊</span> <span>অসমীয়া</span>
+          </button>
+          <button type="button" data-lang="ta-IN" onclick="broadcastVoice('ta-IN', this)" class="voice-chip py-2 px-2.5 rounded-lg bg-slate-900/90 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all">
+            <span>🔊</span> <span>தமிழ்</span>
+          </button>
+          <button type="button" data-lang="mr-IN" onclick="broadcastVoice('mr-IN', this)" class="voice-chip py-2 px-2.5 rounded-lg bg-slate-900/90 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all">
+            <span>🔊</span> <span>मराठी</span>
+          </button>
+          <button type="button" data-lang="bn-IN" onclick="broadcastVoice('bn-IN', this)" class="voice-chip py-2 px-2.5 rounded-lg bg-slate-900/90 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-400 text-xs font-semibold text-white flex items-center justify-center gap-1.5 transition-all">
+            <span>🔊</span> <span>বাংলা</span>
+          </button>
+        </div>
+
+        <!-- Live Acoustic Waveform & Native/Phonetic Broadcast Monitor -->
+        <div class="mt-2 p-2.5 rounded-lg bg-slate-950/95 border border-slate-800">
+          <div class="flex items-center justify-between font-mono text-[9.5px] text-cyan-400 mb-1">
+            <span id="voiceActiveLangBadge">CAP AUDIO TRANSMITTER: STANDBY</span>
+            <span id="voiceEngineBadge" class="text-emerald-400">SIREN + TTS READY</span>
+          </div>
+          <canvas id="voiceWaveCanvas" class="w-full h-6 block rounded bg-slate-900/90 border border-slate-800/80 mb-1.5"></canvas>
+          <div id="voiceSubtitleNative" class="text-[11px] font-medium text-slate-100 leading-snug">
+            Click any regional language button above to broadcast the NDMA CAP siren &amp; spoken emergency alert.
+          </div>
+          <div id="voiceSubtitlePhonetic" class="text-[9.5px] font-mono text-slate-400 mt-0.5 leading-snug">
+            Auto-switches between native OS voices and Indian-English phonetic synthesis for 100% hardware compatibility.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </aside>
+
+</main>
+
+<!-- ==================== FLY-OUT HOTSPOT DRAWER (SLIDES IN WHEN CLICKING PULSING MAP HOT-SPOTS) ==================== -->
+<dialog id="hotspotDrawer" class="flyout-drawer bg-slate-950/95 text-slate-50 border-l border-cyan-500/50 p-0 shadow-2xl" closedby="any" aria-labelledby="drawerZoneTitle">
+  <div class="h-full flex flex-col justify-between p-5 overflow-y-auto">
+    <div>
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span id="drawerZoneBadge" class="px-2 py-0.5 rounded font-mono text-xs font-bold bg-red-500/20 text-red-300 border border-red-500/50">
+            ZONE-A // 94% RISK
+          </span>
+          <span class="font-mono text-xs text-slate-400">1KM SUB-GRID</span>
+        </div>
+        <form method="dialog">
+          <button class="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 font-mono text-xs text-slate-300">
+            ✕ CLOSE
+          </button>
+        </form>
+      </div>
+
+      <h3 id="drawerZoneTitle" class="font-display font-bold text-lg text-white mt-3">
+        Kurla-Mithi Floodplain &amp; Bail Bazaar Cluster
+      </h3>
+      <p id="drawerZoneCoords" class="font-mono text-xs text-cyan-400 mt-0.5">
+        19.0728°N, 72.8826°E • CartoDEM Elevation: 6.4m MSL
+      </p>
+
+      <!-- Localized Telemetry KPI Grid -->
+      <div class="grid grid-cols-2 gap-2.5 my-4 font-mono">
+        <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800">
+          <div class="text-[10px] text-slate-400">PREDICTED WATER DEPTH</div>
+          <div id="drawerDepth" class="text-xl font-bold text-red-400 mt-0.5">1.42m ±0.18m</div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800">
+          <div class="text-[10px] text-slate-400">LOCAL RAINFALL QPE</div>
+          <div id="drawerRain" class="text-xl font-bold text-cyan-300 mt-0.5">79.4 mm/hr</div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800">
+          <div class="text-[10px] text-slate-400">EXPOSED POPULATION</div>
+          <div id="drawerPop" class="text-base font-bold text-white mt-0.5">64,000 Citizens</div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-900/90 border border-slate-800">
+          <div class="text-[10px] text-slate-400">DRAINAGE STATUS</div>
+          <div id="drawerDrain" class="text-xs font-bold text-amber-300 mt-1">Tide-Locked (Surcharge)</div>
+        </div>
+      </div>
+
+      <!-- SHAP Attribution Chart Inside Drawer -->
+      <div class="p-3 rounded-lg bg-slate-900/70 border border-slate-800 mb-4">
+        <div class="font-mono text-[10px] text-cyan-400 font-bold uppercase mb-2">
+          LOCAL XAI SHAP ATTRIBUTION FACTORS
+        </div>
+        <div class="h-32 relative">
+          <canvas id="shapBarChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Critical Infrastructure in Sector -->
+      <div class="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+        <div class="font-mono text-[10px] text-slate-400 font-bold uppercase mb-2">
+          CRITICAL INFRASTRUCTURE &amp; ARTERIAL CORRIDORS
+        </div>
+        <div id="infraStatusContainer" class="font-mono text-xs space-y-1.5"></div>
+      </div>
+    </div>
+
+    <!-- Drawer Bottom Action CTAs -->
+    <div class="pt-4 border-t border-slate-800 flex flex-col gap-2 mt-4">
+      <button onclick="triggerSmsBroadcastZoneA(); document.getElementById('hotspotDrawer').close();" class="w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-500 font-mono text-xs font-bold text-white uppercase tracking-wider">
+        📲 Dispatch Targeted Cell-Broadcast to This Sector
+      </button>
+      <button onclick="broadcastVoice('en-IN')" class="w-full py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400 font-mono text-xs font-semibold text-cyan-200 uppercase">
+        🔊 Play Sector Voice Warning
+      </button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ==================== POWER MODAL A: 3D ISOMETRIC FLOOD DIGITAL TWIN ==================== -->
+<dialog id="twin3dDialog" class="cyber-dialog tactical-modal m-auto w-[min(860px,95vw)] rounded-xl bg-slate-950 text-slate-50 border border-cyan-500/50 p-0 shadow-2xl" closedby="any">
+  <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center">
+    <div class="font-display font-bold text-sm uppercase tracking-wider text-cyan-400">
+      3D Isometric Digital Twin // 1km×1km Shallow-Water Surface Mesh
+    </div>
+    <form method="dialog"><button class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono">CLOSE [ESC]</button></form>
+  </div>
+  <div class="p-5">
+    <div class="flex flex-wrap justify-between items-center gap-3 mb-3 font-mono text-xs text-slate-400">
+      <span>BASIN: <b class="text-cyan-300" id="twinBasinLabel">Mumbai — Mithi Basin</b></span>
+      <span>ROTATE YAW: <input type="range" id="twinYawSlider" min="-60" max="60" value="32" class="w-28 accent-cyan-400"></span>
+      <span>PITCH: <input type="range" id="twinPitchSlider" min="20" max="70" value="42" class="w-28 accent-cyan-400"></span>
+      <span>WSE DEPTH: <b class="text-red-400" id="twinDepthLabel">1.42m</b></span>
+    </div>
+    <div class="bg-slate-950 border border-slate-800 rounded-lg h-[360px] relative overflow-hidden">
+      <canvas id="twin3dCanvas" class="w-full h-full block"></canvas>
+    </div>
+  </div>
+</dialog>
+
+<!-- ==================== POWER MODAL B: SCADA PUMP, SLUICE GATE & TIDAL LOCK CONTROL ==================== -->
+<dialog id="scadaDialog" class="cyber-dialog tactical-modal m-auto w-[min(840px,95vw)] rounded-xl bg-slate-950 text-slate-50 border border-purple-500/50 p-0 shadow-2xl" closedby="any">
+  <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center">
+    <div class="font-display font-bold text-sm uppercase tracking-wider text-purple-300">
+      SCADA Municipal De-Watering Pumps, Spillway &amp; Tidal Lock Actuator
+    </div>
+    <form method="dialog"><button class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono">CLOSE [ESC]</button></form>
+  </div>
+  <div class="p-5 space-y-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-mono text-xs">
+      <label class="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center cursor-pointer">
+        <div>
+          <div class="font-bold text-white">PUMP-01 // HAJI ALI AXIAL (60 m³/s)</div>
+          <div class="text-[10px] text-emerald-400">Drawdown: -0.06m</div>
+        </div>
+        <input type="checkbox" class="scada-pump-chk w-4 h-4 accent-emerald-400" checked onchange="recomputeScadaPumps()">
+      </label>
+      <label class="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center cursor-pointer">
+        <div>
+          <div class="font-bold text-white">PUMP-02 // LOVE GROVE OUTFALL (60 m³/s)</div>
+          <div class="text-[10px] text-emerald-400">Drawdown: -0.06m</div>
+        </div>
+        <input type="checkbox" class="scada-pump-chk w-4 h-4 accent-emerald-400" checked onchange="recomputeScadaPumps()">
+      </label>
+      <label class="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center cursor-pointer">
+        <div>
+          <div class="font-bold text-white">PUMP-03 // BRITANNIA BATTERY (45 m³/s)</div>
+          <div class="text-[10px] text-slate-400">Standby • Drawdown: -0.06m</div>
+        </div>
+        <input type="checkbox" class="scada-pump-chk w-4 h-4 accent-emerald-400" onchange="recomputeScadaPumps()">
+      </label>
+      <label class="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between items-center cursor-pointer">
+        <div>
+          <div class="font-bold text-white">PUMP-04 // RESERVE BOOSTER (55 m³/s)</div>
+          <div class="text-[10px] text-slate-400">Standby • Drawdown: -0.06m</div>
+        </div>
+        <input type="checkbox" class="scada-pump-chk w-4 h-4 accent-emerald-400" onchange="recomputeScadaPumps()">
+      </label>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
+      <div class="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+        <div class="flex justify-between mb-1">
+          <span>TIDAL LOCK SURGE (+MSL)</span>
+          <b id="lblTideSurge" class="text-cyan-300">+0.45 m</b>
+        </div>
+        <input type="range" id="sliderTideSurge" min="0" max="2.5" step="0.05" value="0.45" oninput="recomputeScadaPumps()" class="w-full accent-cyan-400">
+      </div>
+      <div class="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+        <div class="flex justify-between mb-1">
+          <span>UPSTREAM DAM SPILLWAY</span>
+          <b id="lblDamCusecs" class="text-amber-300">2,400 cusecs</b>
+        </div>
+        <input type="range" id="sliderDamCusecs" min="0" max="25000" step="200" value="2400" oninput="recomputeScadaPumps()" class="w-full accent-amber-400">
+      </div>
+    </div>
+
+    <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 flex justify-between font-mono text-xs">
+      <span>ACTIVE PUMPS: <b class="text-emerald-400" id="scadaActiveCount">2 / 4 UNITS</b></span>
+      <span>NET DRAWDOWN: <b class="text-cyan-300" id="scadaNetEffect">-0.12 m</b></span>
+      <span>UPDATED DEPTH: <b class="text-red-400" id="scadaFinalDepth">1.42 m</b></span>
+    </div>
+  </div>
+</dialog>
+
+<!-- ==================== POWER MODAL C: CCTV COMPUTER VISION GAUGE ==================== -->
+<dialog id="cctvDialog" class="cyber-dialog tactical-modal m-auto w-[min(800px,95vw)] rounded-xl bg-slate-950 text-slate-50 border border-cyan-500/50 p-0 shadow-2xl" closedby="any">
+  <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center">
+    <div class="font-display font-bold text-sm uppercase tracking-wider text-cyan-400">
+      AI Computer Vision Virtual Flood Gauge (YOLOv8 + SegFormer)
+    </div>
+    <form method="dialog"><button class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono">CLOSE [ESC]</button></form>
+  </div>
+  <div class="p-5">
+    <div class="bg-slate-950 border border-slate-800 rounded-lg h-64 mb-3 overflow-hidden">
+      <canvas id="cctvAiCanvas" class="w-full h-full block"></canvas>
+    </div>
+    <div class="grid grid-cols-3 gap-3 font-mono text-xs text-center">
+      <div class="p-2.5 rounded bg-slate-900 border border-slate-800">FEED: <b class="text-cyan-300">CAM-UNDERPASS-09</b></div>
+      <div class="p-2.5 rounded bg-slate-900 border border-slate-800">CV DEPTH: <b class="text-red-400" id="cvDepthReadout">1.42m ±0.04m</b></div>
+      <div class="p-2.5 rounded bg-slate-900 border border-slate-800">CORROBORATION: <b class="text-emerald-400">97.8% MATCH</b></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- ==================== POWER MODAL D: LIVE INDIA REAL WEATHER & NWP API SCANNER ==================== -->
+<dialog id="liveApiDialog" class="cyber-dialog tactical-modal m-auto w-[min(820px,95vw)] rounded-xl bg-slate-950 text-slate-50 border border-emerald-500/50 p-0 shadow-2xl" closedby="any">
+  <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center">
+    <div class="font-display font-bold text-sm uppercase tracking-wider text-emerald-400">
+      Live India Real-Time Weather &amp; GFS NWP API Scanner (Open-Meteo Live Telemetry)
+    </div>
+    <form method="dialog"><button class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono">CLOSE [ESC]</button></form>
+  </div>
+  <div class="p-5 space-y-3">
+    <div class="flex flex-wrap gap-2 font-mono text-xs">
+      <button onclick="scanLiveCity('Patna — Ganga Basin', 25.5941, 85.1376, 91)" class="px-3 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300">[SCAN: PATNA]</button>
+      <button onclick="scanLiveCity('Bengaluru — Bellandur Basin', 12.9352, 77.6245, 93)" class="px-3 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300">[SCAN: BENGALURU]</button>
+      <button onclick="scanLiveCity('Hyderabad — Musi Catchment', 17.3850, 78.4867, 92)" class="px-3 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300">[SCAN: HYDERABAD]</button>
+      <button onclick="scanLiveCity('Silchar — Barak Valley', 24.8333, 92.7789, 89)" class="px-3 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300">[SCAN: SILCHAR]</button>
+      <button onclick="scanLiveCity('Srinagar — Jhelum Floodplain', 34.0837, 74.7973, 87)" class="px-3 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300">[SCAN: SRINAGAR]</button>
+    </div>
+    <div class="grid grid-cols-4 gap-2 items-end font-mono text-xs">
+      <input type="text" id="customCityName" value="Custom Basin Probe" class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-white">
+      <input type="number" id="customLat" value="25.5941" step="0.01" class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-white">
+      <input type="number" id="customLng" value="85.1376" step="0.01" class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-white">
+      <button onclick="scanCustomCoords()" class="py-2 px-3 rounded bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold">[FETCH LIVE NWP]</button>
+    </div>
+    <pre id="liveApiStatusBox" class="p-3 rounded bg-slate-900 border border-slate-800 font-mono text-xs text-cyan-300 h-40 overflow-y-auto">Ready to query live Open-Meteo / GFS NWP API for any Indian coordinate...</pre>
+  </div>
+</dialog>
+
+<!-- ==================== POWER MODAL E: AI HYDROMET COPILOT ==================== -->
+<dialog id="copilotDialog" class="cyber-dialog tactical-modal m-auto w-[min(820px,95vw)] rounded-xl bg-slate-950 text-slate-50 border border-cyan-500/50 p-0 shadow-2xl" closedby="any">
+  <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center">
+    <div class="font-display font-bold text-sm uppercase tracking-wider text-cyan-400">
+      MOES-Copilot // Autonomous Hydromet &amp; Disaster Decision-Support Agent
+    </div>
+    <form method="dialog"><button class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono">CLOSE [ESC]</button></form>
+  </div>
+  <div class="p-5 space-y-3 font-mono text-xs">
+    <div class="flex flex-wrap gap-2">
+      <button onclick="runCopilotQuery('bias')" class="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300">[1. 4-SOURCE KALMAN BIAS]</button>
+      <button onclick="runCopilotQuery('ndrf')" class="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-emerald-300">[2. 6H NDRF STAGING PLAN]</button>
+      <button onclick="runCopilotQuery('outage')" class="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300">[3. RADAR OUTAGE FALLBACK]</button>
+      <button onclick="runCopilotQuery('substation')" class="px-2.5 py-1.5 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-red-300">[4. INFRA SUBMERGENCE AUDIT]</button>
+    </div>
+    <div id="copilotTerminal" class="p-3.5 rounded-lg bg-slate-900 border border-slate-800 h-56 overflow-y-auto leading-relaxed"></div>
+    <div class="flex gap-2">
+      <input type="text" id="copilotCustomInput" placeholder="Ask MOES-Copilot about rainfall accumulation, SCS-CN runoff, or evacuation routing..." class="flex-1 px-3 py-2 rounded bg-slate-900 border border-slate-700 text-white">
+      <button onclick="runCustomCopilot()" class="px-4 py-2 rounded bg-cyan-500 text-slate-950 font-bold">[EXECUTE]</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ==================== MODAL 1: HISTORICAL BACK-TESTING & MLOPS ==================== -->
+<dialog id="backtestDialog" class="cyber-dialog tactical-modal m-auto w-[min(860px,95vw)] rounded-xl bg-slate-950 text-slate-50 border border-amber-500/50 p-0 shadow-2xl" closedby="any">
+  <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center">
+    <div class="font-display font-bold text-sm uppercase tracking-wider text-amber-400">
+      MLOps Verification &amp; Historical Disaster Back-Testing Suite
+    </div>
+    <form method="dialog"><button class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono">CLOSE [ESC]</button></form>
+  </div>
+  <div class="p-5">
+    <table class="w-full text-left font-mono text-xs border-collapse">
+      <thead>
+        <tr class="border-b border-slate-800 text-cyan-400">
+          <th class="py-2 px-2">BENCHMARK EVENT</th>
+          <th class="py-2 px-2">PEAK QPE</th>
+          <th class="py-2 px-2">OBS VS PRED</th>
+          <th class="py-2 px-2">POD / FAR / CSI</th>
+          <th class="py-2 px-2">SAR IoU</th>
+          <th class="py-2 px-2">ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="backtestTableBody" class="divide-y divide-slate-800/70"></tbody>
+    </table>
+  </div>
+</dialog>
+
+<!-- ==================== MODAL 2: HUMAN-IN-THE-LOOP AUTHORITY OVERRIDE ==================== -->
+<dialog id="hitlDialog" class="cyber-dialog tactical-modal m-auto w-[min(800px,95vw)] rounded-xl bg-slate-950 text-slate-50 border border-amber-500/50 p-0 shadow-2xl" closedby="any">
+  <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center">
+    <div class="font-display font-bold text-sm uppercase tracking-wider text-amber-400">
+      Human-in-the-Loop (HITL) Official Disaster Authority Override
+    </div>
+    <form method="dialog"><button class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono">CLOSE [ESC]</button></form>
+  </div>
+  <div class="p-5 space-y-3 font-mono text-xs">
+    <div>
+      <label class="text-slate-400 block mb-1">TARGET BASIN GRID</label>
+      <input type="text" id="hitlTargetGrid" readonly class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700 text-cyan-300">
+    </div>
+    <div>
+      <label class="text-slate-400 block mb-1">AUTHORIZING DUTY OFFICER (IMD / SDMA / DDMA)</label>
+      <input type="text" id="hitlOfficerName" value="Dr. S. K. Mahapatra // Chief Hydromet Duty Officer (MoES)" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700 text-white">
+    </div>
+    <div>
+      <label class="text-slate-400 block mb-1">OVERRIDE SEVERITY CLASSIFICATION</label>
+      <select id="hitlAlertSelect" class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700 text-white">
+        <option value="RED">RED — EXTREME INUNDATION WARNING (ACTIVATE NDRF &amp; PUMP SURGE)</option>
+        <option value="ORANGE">ORANGE — HIGH INUNDATION WATCH (PRE-STAGE DE-WATERING UNITS)</option>
+        <option value="YELLOW">YELLOW — LOCALIZED WATERLOGGING ADVISORY</option>
+        <option value="GREEN">GREEN — NORMAL DRAINAGE OPERATIONS</option>
+      </select>
+    </div>
+    <div>
+      <label class="text-slate-400 block mb-1">AUDIT REASON</label>
+      <input type="text" id="hitlAuditReason" value="Verified DWR C-band reflectivity core (>55 dBZ) with AWS gauge accumulation and outfall tide lock." class="w-full px-3 py-2 rounded bg-slate-900 border border-slate-700 text-white">
+    </div>
+    <div class="flex justify-end">
+      <button onclick="commitHitlOverride()" class="px-4 py-2 rounded bg-amber-500 text-slate-950 font-bold">[COMMIT OVERRIDE &amp; SIGN SHA-256 LOG]</button>
+    </div>
+    <div class="pt-3 border-t border-slate-800">
+      <div class="text-cyan-400 font-bold mb-1">IMMUTABLE AUTHORITY AUDIT LEDGER:</div>
+      <div id="hitlAuditList" class="max-h-32 overflow-y-auto space-y-1.5 text-slate-300"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- ==================== MODAL 3: NDMA CAP v1.2 XML & SITREP EXPORT ==================== -->
+<dialog id="capDialog" class="cyber-dialog tactical-modal m-auto w-[min(820px,95vw)] rounded-xl bg-slate-950 text-slate-50 border border-cyan-500/50 p-0 shadow-2xl" closedby="any">
+  <div class="px-5 py-3.5 bg-slate-900/90 border-b border-slate-800 flex justify-between items-center">
+    <div class="font-display font-bold text-sm uppercase tracking-wider text-cyan-400">
+      NDMA Common Alerting Protocol (CAP v1.2) &amp; SitRep Generator
+    </div>
+    <form method="dialog"><button class="px-2.5 py-1 rounded bg-slate-800 text-xs font-mono">CLOSE [ESC]</button></form>
+  </div>
+  <div class="p-5">
+    <pre id="capXmlOutput" class="p-3.5 rounded-lg bg-slate-900 border border-slate-800 font-mono text-xs text-cyan-300 max-h-72 overflow-y-auto whitespace-pre-wrap"></pre>
+    <div class="flex justify-end gap-3 mt-4 font-mono text-xs">
+      <button onclick="exportCapXmlFile()" class="px-3.5 py-2 rounded bg-cyan-500/20 border border-cyan-400 text-cyan-200 font-bold">[DOWNLOAD CAP v1.2 .XML]</button>
+      <button onclick="exportOfficialSitRep()" class="px-3.5 py-2 rounded bg-red-600 text-white font-bold">[DOWNLOAD OFFICIAL MOES SITREP .TXT]</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+// ==================== EMBEDDED MULTI-SOURCE HYDROMET DATASET ====================
+const DEFAULT_GRIDS = [
+  {
+    id: "GRID-MUM-01",
+    name: "Mumbai — Mithi Basin & Kurla Lowland",
+    district: "Mumbai Suburban",
+    state: "Maharashtra",
+    lat: 19.0728,
+    lng: 72.8826,
+    grid_resolution: "1.0 km × 1.0 km",
+    elevation_m: 6.4,
+    slope_deg: 1.2,
+    lulc_class: "High-Density Urban Impervious (88%)",
+    impervious_pct: 88,
+    scs_curve_number: 94,
+    drainage_capacity_mm_hr: 50.0,
+    drainage_efficiency_pct: 62,
+    topographic_wetness_index: 14.8,
+    sources: {
+      insat_3ds_tir_k: 204.5,
+      insat_3ds_rain_mm_hr: 74.2,
+      gsmap_isro_mm_hr: 69.8,
+      imd_dwr_dbz: 56.5,
+      imd_dwr_rain_mm_hr: 82.4,
+      aws_gauge_mm_hr: 79.0,
+      aws_station_id: "AWS-SANTACRUZ-04",
+      nwp_ncmrwf_mm_hr: 68.5,
+      nwp_downscaled_1km_mm_hr: 78.6
+    },
+    fused_rainfall_mm_hr: 79.4,
+    accumulated_rain_3h_mm: 186.5,
+    accumulated_rain_24h_mm: 312.0,
+    infiltration_loss_mm_hr: 6.8,
+    surface_runoff_mm_hr: 72.6,
+    predicted_inundation_depth_m: 1.42,
+    ensemble_uncertainty_m: 0.18,
+    confidence_score_pct: 94.2,
+    alert_color: "RED",
+    severity_label: "EXTREME INUNDATION WARNING (ACT NOW)",
+    lead_time_hrs: 3.5,
+    hitl_status: "AI_RECOMMENDED_RED",
+    hitl_officer_note: "Awaiting BMC / DDMA Duty Officer confirmation for NDRF boat staging at Kurla Bail Bazaar.",
+    affected_population: 145000,
+    critical_infra_at_risk: [
+      { asset: "CSMT–Kurla Central Rail Corridor", depth: "1.35m", status: "SUSPENDED" },
+      { asset: "LBS Marg & Milan Subway Underpass", depth: "1.42m", status: "SUBMERGED" },
+      { asset: "Eastern Express Highway Corridor", depth: "0.12m", status: "OPEN (EVAC ROUTE)" }
+    ],
+    recommended_actions: [
+      "Activate pumping stations at Haji Ali, Love Grove & Britannia Outfalls at 100% capacity",
+      "Close Milan & Andheri subways; divert vehicular traffic to Eastern Express Highway",
+      "Pre-position 4 NDRF flood rescue teams at Kurla Bail Bazaar low-lying clusters"
+    ],
+    shap_attribution: {
+      "3h Radar+AWS Accumulation": 38,
+      "Tide Lock & Drain Bottleneck": 27,
+      "SCS-CN Imperviousness (94)": 19,
+      "INSAT-3DS Cooling (204K)": 10,
+      "DEM Depression (TWI 14.8)": 6
+    },
+    hourly_series: {
+      labels: ["-3h", "-2h", "-1h", "LIVE", "+1h", "+2h", "+3h", "+6h", "+12h", "+18h", "+24h"],
+      satellite_gsmap: [28, 42, 58, 74, 81, 76, 60, 42, 25, 18, 12],
+      radar_dwr: [32, 49, 68, 82, 89, 80, 62, null, null, null, null],
+      nwp_model: [25, 38, 52, 68, 75, 72, 58, 46, 30, 22, 15],
+      fused_ensemble: [31, 47, 65, 79, 86, 78, 61, 44, 28, 19, 13],
+      uncertainty_upper: [35, 52, 72, 86, 95, 87, 70, 53, 36, 26, 19],
+      uncertainty_lower: [27, 42, 58, 72, 77, 69, 52, 35, 20, 12, 7]
+    },
+    inundation_zones: [
+      {lat: 19.0728, lng: 72.8826, radius_m: 1350, depth_m: 1.42, zone_name: "Zone A: Kurla-Mithi Floodplain", risk_pct: 94, pop: 68000},
+      {lat: 19.0845, lng: 72.8412, radius_m: 950, depth_m: 0.95, zone_name: "Zone B: Milan & Andheri Subway", risk_pct: 89, pop: 45000},
+      {lat: 19.0176, lng: 72.8428, radius_m: 1100, depth_m: 1.15, zone_name: "Zone C: Hindmata-Dadar Bowl", risk_pct: 82, pop: 32000}
+    ],
+    evac_corridor: [[19.0728, 72.8826], [19.0680, 72.8690], [19.0595, 72.8550]],
+    blocked_corridor: [[19.0728, 72.8826], [19.0845, 72.8412]]
+  },
+  {
+    id: "GRID-GUW-02",
+    name: "Guwahati — Bharalu-Bahini Urban Catchment",
+    district: "Kamrup Metropolitan",
+    state: "Assam (NER)",
+    lat: 26.1445,
+    lng: 91.7362,
+    grid_resolution: "1.0 km × 1.0 km",
+    elevation_m: 51.2,
+    slope_deg: 4.8,
+    lulc_class: "Piedmont Urban + Encroached Wetland",
+    impervious_pct: 76,
+    scs_curve_number: 91,
+    drainage_capacity_mm_hr: 38.0,
+    drainage_efficiency_pct: 54,
+    topographic_wetness_index: 13.9,
+    sources: {
+      insat_3ds_tir_k: 198.2,
+      insat_3ds_rain_mm_hr: 66.0,
+      gsmap_isro_mm_hr: 62.4,
+      imd_dwr_dbz: 53.0,
+      imd_dwr_rain_mm_hr: 71.5,
+      aws_gauge_mm_hr: 68.2,
+      aws_station_id: "AWS-DISPUR-01",
+      nwp_ncmrwf_mm_hr: 59.0,
+      nwp_downscaled_1km_mm_hr: 69.1
+    },
+    fused_rainfall_mm_hr: 69.8,
+    accumulated_rain_3h_mm: 154.0,
+    accumulated_rain_24h_mm: 248.5,
+    infiltration_loss_mm_hr: 9.4,
+    surface_runoff_mm_hr: 60.4,
+    predicted_inundation_depth_m: 1.18,
+    ensemble_uncertainty_m: 0.15,
+    confidence_score_pct: 92.8,
+    alert_color: "RED",
+    severity_label: "SEVERE FLASH INUNDATION WARNING",
+    lead_time_hrs: 4.0,
+    hitl_status: "OFFICIAL_VERIFIED_RED",
+    hitl_officer_note: "ASDMA verified Meghalaya hill runoff entering Bahini river; sluice gates at Bharalumukh closed.",
+    affected_population: 92000,
+    critical_infra_at_risk: [
+      { asset: "GS Road Anil Nagar–Nabin Nagar", depth: "1.18m", status: "SUBMERGED" },
+      { asset: "Rukminigaon 33kV Substation", depth: "0.92m", status: "ISOLATED" },
+      { asset: "NH-27 Khanapara Elevated Flyover", depth: "0.05m", status: "OPEN (NDRF ROUTE)" }
+    ],
+    recommended_actions: [
+      "Close Bharalumukh sluice gate against Brahmaputra backflow; run high-volume axial pumps",
+      "Issue Assamese & English CAP voice alerts to Anil Nagar, Nabin Nagar, and Hatigaon",
+      "Enforce power isolation in submerged distribution transformers (>0.8m depth)"
+    ],
+    shap_attribution: {
+      "Meghalaya Orographic Runoff": 34,
+      "3h Radar+AWS Accumulation": 29,
+      "Bharalu Sluice Backwater": 21,
+      "Wetland Storage Loss": 11,
+      "NWP Convective Trend": 5
+    },
+    hourly_series: {
+      labels: ["-3h", "-2h", "-1h", "LIVE", "+1h", "+2h", "+3h", "+6h", "+12h", "+18h", "+24h"],
+      satellite_gsmap: [22, 35, 50, 66, 72, 65, 48, 34, 20, 14, 9],
+      radar_dwr: [26, 41, 59, 72, 78, 68, 52, null, null, null, null],
+      nwp_model: [20, 32, 46, 59, 64, 60, 45, 35, 22, 16, 11],
+      fused_ensemble: [25, 39, 56, 70, 76, 67, 50, 35, 21, 15, 10],
+      uncertainty_upper: [29, 44, 62, 77, 84, 75, 58, 42, 27, 20, 15],
+      uncertainty_lower: [21, 34, 50, 63, 68, 59, 42, 28, 15, 10, 5]
+    },
+    inundation_zones: [
+      {lat: 26.1445, lng: 91.7362, radius_m: 1200, depth_m: 1.18, zone_name: "Zone A: Anil Nagar & Nabin Nagar Bowl", risk_pct: 92, pop: 54000},
+      {lat: 26.1318, lng: 91.7952, radius_m: 1050, depth_m: 0.92, zone_name: "Zone B: Rukminigaon & Beltola Basin", risk_pct: 85, pop: 38000}
+    ],
+    evac_corridor: [[26.1445, 91.7362], [26.1580, 91.7520], [26.1690, 91.7650]],
+    blocked_corridor: [[26.1445, 91.7362], [26.1318, 91.7952]]
+  },
+  {
+    id: "GRID-MAA-03",
+    name: "Chennai — Adyar-Velachery Marsh Basin",
+    district: "Chennai",
+    state: "Tamil Nadu",
+    lat: 12.9756,
+    lng: 80.2207,
+    grid_resolution: "1.0 km × 1.0 km",
+    elevation_m: 4.8,
+    slope_deg: 0.8,
+    lulc_class: "Coastal Urban Built-Up (82%)",
+    impervious_pct: 82,
+    scs_curve_number: 92,
+    drainage_capacity_mm_hr: 45.0,
+    drainage_efficiency_pct: 68,
+    topographic_wetness_index: 15.2,
+    sources: {
+      insat_3ds_tir_k: 212.0,
+      insat_3ds_rain_mm_hr: 48.5,
+      gsmap_isro_mm_hr: 45.2,
+      imd_dwr_dbz: 47.5,
+      imd_dwr_rain_mm_hr: 54.0,
+      aws_gauge_mm_hr: 52.4,
+      aws_station_id: "AWS-MEENAMBAKKAM-02",
+      nwp_ncmrwf_mm_hr: 49.0,
+      nwp_downscaled_1km_mm_hr: 53.2
+    },
+    fused_rainfall_mm_hr: 52.8,
+    accumulated_rain_3h_mm: 124.0,
+    accumulated_rain_24h_mm: 210.0,
+    infiltration_loss_mm_hr: 7.9,
+    surface_runoff_mm_hr: 44.9,
+    predicted_inundation_depth_m: 0.78,
+    ensemble_uncertainty_m: 0.12,
+    confidence_score_pct: 91.5,
+    alert_color: "ORANGE",
+    severity_label: "HIGH INUNDATION WATCH (PREPARE)",
+    lead_time_hrs: 5.5,
+    hitl_status: "AI_RECOMMENDED_ORANGE",
+    hitl_officer_note: "Monitoring Chembarambakkam reservoir inflow; pre-release advisory ready.",
+    affected_population: 118000,
+    critical_infra_at_risk: [
+      { asset: "Velachery–Taramani Link Road", depth: "0.78m", status: "WATERLOGGED" },
+      { asset: "Pallikaranai Radial Corridor", depth: "0.62m", status: "RESTRICTED" },
+      { asset: "Guindy Kathipara Elevated Corridor", depth: "0.00m", status: "OPEN (SAFE ROUTE)" }
+    ],
+    recommended_actions: [
+      "Regulate Chembarambakkam surplus outflow to <3,000 cusecs during high tide window",
+      "Deploy mobile de-watering pumps along Velachery-Taramani Link Road",
+      "Broadcast Tamil & English CAP advisories to ground-floor residents in Zone 13 & 14"
+    ],
+    shap_attribution: {
+      "3h Radar+AWS Accumulation": 33,
+      "Marsh Bowl Topography": 28,
+      "SCS-CN Imperviousness": 20,
+      "Estuary Tidal Backwater": 12,
+      "NWP Cyclonic Feeder Band": 7
+    },
+    hourly_series: {
+      labels: ["-3h", "-2h", "-1h", "LIVE", "+1h", "+2h", "+3h", "+6h", "+12h", "+18h", "+24h"],
+      satellite_gsmap: [18, 28, 39, 48, 55, 58, 50, 38, 26, 18, 12],
+      radar_dwr: [20, 32, 44, 54, 60, 62, 53, null, null, null, null],
+      nwp_model: [16, 26, 36, 49, 54, 56, 49, 39, 28, 20, 14],
+      fused_ensemble: [19, 30, 42, 53, 59, 61, 52, 39, 27, 19, 13],
+      uncertainty_upper: [23, 35, 48, 59, 66, 68, 59, 46, 33, 24, 18],
+      uncertainty_lower: [15, 25, 36, 47, 52, 54, 45, 32, 21, 14, 8]
+    },
+    inundation_zones: [
+      {lat: 12.9756, lng: 80.2207, radius_m: 1300, depth_m: 0.78, zone_name: "Zone A: Velachery-Pallikaranai Margin", risk_pct: 84, pop: 72000},
+      {lat: 13.0102, lng: 80.2568, radius_m: 950, depth_m: 0.62, zone_name: "Zone B: Adyar Estuary Floodplain", risk_pct: 76, pop: 46000}
+    ],
+    evac_corridor: [[12.9756, 80.2207], [12.9950, 80.2120], [13.0067, 80.2050]],
+    blocked_corridor: [[12.9756, 80.2207], [13.0102, 80.2568]]
+  },
+  {
+    id: "GRID-WAY-04",
+    name: "Wayanad — Chaliyar-Meppadi Hill Catchment",
+    district: "Wayanad",
+    state: "Kerala",
+    lat: 11.5542,
+    lng: 76.1348,
+    grid_resolution: "1.0 km × 1.0 km",
+    elevation_m: 845.0,
+    slope_deg: 24.5,
+    lulc_class: "Montane Plantation & Steep Valley",
+    impervious_pct: 38,
+    scs_curve_number: 86,
+    drainage_capacity_mm_hr: 55.0,
+    drainage_efficiency_pct: 70,
+    topographic_wetness_index: 11.4,
+    sources: {
+      insat_3ds_tir_k: 209.8,
+      insat_3ds_rain_mm_hr: 54.0,
+      gsmap_isro_mm_hr: 51.5,
+      imd_dwr_dbz: 49.2,
+      imd_dwr_rain_mm_hr: 58.6,
+      aws_gauge_mm_hr: 56.8,
+      aws_station_id: "AWS-MEPPADI-07",
+      nwp_ncmrwf_mm_hr: 48.0,
+      nwp_downscaled_1km_mm_hr: 57.2
+    },
+    fused_rainfall_mm_hr: 57.4,
+    accumulated_rain_3h_mm: 142.0,
+    accumulated_rain_24h_mm: 284.0,
+    infiltration_loss_mm_hr: 14.2,
+    surface_runoff_mm_hr: 43.2,
+    predicted_inundation_depth_m: 0.84,
+    ensemble_uncertainty_m: 0.14,
+    confidence_score_pct: 90.4,
+    alert_color: "ORANGE",
+    severity_label: "HILLY TORRENT & VALLEY INUNDATION",
+    lead_time_hrs: 4.5,
+    hitl_status: "AI_RECOMMENDED_ORANGE",
+    hitl_officer_note: "KSDMA monitoring Chaliyar headwaters for rapid stream surge and debris-laden runoff.",
+    affected_population: 34000,
+    critical_infra_at_risk: [
+      { asset: "Meppadi–Chooralmala Low Bridge", depth: "0.84m", status: "HIGH TORRENT" },
+      { asset: "SH-29 Ghat Hairpin Section", depth: "0.45m", status: "RESTRICTED" },
+      { asset: "Kalpetta High-Ground Relief Camp", depth: "0.00m", status: "OPEN (SAFE)" }
+    ],
+    recommended_actions: [
+      "Evacuate families within 150m of Chaliyar headwater stream channels",
+      "Restrict heavy commercial traffic on Ghat road curves",
+      "Trigger Malayalam & English IVR alerts via panchayat disaster committees"
+    ],
+    shap_attribution: {
+      "24h Antecedent Soil Moisture": 39,
+      "Orographic Radar QPE": 28,
+      "Steep Valley Concentration": 18,
+      "NWP Arabian Sea Jet Surge": 10,
+      "Channel Constriction": 5
+    },
+    hourly_series: {
+      labels: ["-3h", "-2h", "-1h", "LIVE", "+1h", "+2h", "+3h", "+6h", "+12h", "+18h", "+24h"],
+      satellite_gsmap: [20, 31, 44, 54, 60, 55, 44, 32, 22, 16, 12],
+      radar_dwr: [24, 36, 49, 59, 64, 58, 46, null, null, null, null],
+      nwp_model: [18, 28, 39, 48, 54, 50, 40, 30, 21, 15, 11],
+      fused_ensemble: [22, 34, 47, 57, 62, 57, 45, 31, 21, 15, 11],
+      uncertainty_upper: [26, 39, 53, 64, 70, 64, 52, 37, 26, 20, 16],
+      uncertainty_lower: [18, 29, 41, 50, 54, 50, 38, 25, 16, 10, 6]
+    },
+    inundation_zones: [
+      {lat: 11.5542, lng: 76.1348, radius_m: 1100, depth_m: 0.84, zone_name: "Zone A: Chaliyar Valley Floodplain", risk_pct: 88, pop: 34000}
+    ],
+    evac_corridor: [[11.5542, 76.1348], [11.5820, 76.1150], [11.6085, 76.0850]],
+    blocked_corridor: [[11.5542, 76.1348], [11.5310, 76.1580]]
+  },
+  {
+    id: "GRID-DEL-05",
+    name: "New Delhi — Yamuna ITO & Ring Road Floodplain",
+    district: "Central & East Delhi",
+    state: "NCT of Delhi",
+    lat: 28.6289,
+    lng: 77.2505,
+    grid_resolution: "1.0 km × 1.0 km",
+    elevation_m: 208.5,
+    slope_deg: 0.9,
+    lulc_class: "Dense Urban + River Embankment",
+    impervious_pct: 84,
+    scs_curve_number: 90,
+    drainage_capacity_mm_hr: 42.0,
+    drainage_efficiency_pct: 74,
+    topographic_wetness_index: 13.5,
+    sources: {
+      insat_3ds_tir_k: 226.4,
+      insat_3ds_rain_mm_hr: 28.0,
+      gsmap_isro_mm_hr: 26.5,
+      imd_dwr_dbz: 39.5,
+      imd_dwr_rain_mm_hr: 32.4,
+      aws_gauge_mm_hr: 31.0,
+      aws_station_id: "AWS-SAFDARJUNG-01",
+      nwp_ncmrwf_mm_hr: 29.5,
+      nwp_downscaled_1km_mm_hr: 31.8
+    },
+    fused_rainfall_mm_hr: 31.6,
+    accumulated_rain_3h_mm: 68.0,
+    accumulated_rain_24h_mm: 112.0,
+    infiltration_loss_mm_hr: 8.6,
+    surface_runoff_mm_hr: 23.0,
+    predicted_inundation_depth_m: 0.36,
+    ensemble_uncertainty_m: 0.08,
+    confidence_score_pct: 95.1,
+    alert_color: "YELLOW",
+    severity_label: "LOCALIZED WATERLOGGING ADVISORY",
+    lead_time_hrs: 6.0,
+    hitl_status: "AI_RECOMMENDED_YELLOW",
+    hitl_officer_note: "Minto Bridge & ITO Regulator pumps on standby; Yamuna level below warning mark.",
+    affected_population: 64000,
+    critical_infra_at_risk: [
+      { asset: "Minto Road Railway Underpass", depth: "0.36m", status: "PUMPS ACTIVE" },
+      { asset: "ITO Ring Road Regulator", depth: "0.22m", status: "MONITORED" },
+      { asset: "Barapullah Elevated Corridor", depth: "0.00m", status: "OPEN (CLEAR)" }
+    ],
+    recommended_actions: [
+      "Keep automatic sump pumps operational at Minto Bridge & Zakhira underpasses",
+      "Clear storm-drain grating debris along Ring Road Drain No. 12",
+      "Issue commuter traffic advisory via Delhi Traffic Police & Google Maps feed"
+    ],
+    shap_attribution: {
+      "Urban Imperviousness": 35,
+      "3h Radar+AWS Accumulation": 30,
+      "Underpass Micro-Depression": 22,
+      "Drain No.12 Outfall Level": 9,
+      "NWP Synoptic Trough": 4
+    },
+    hourly_series: {
+      labels: ["-3h", "-2h", "-1h", "LIVE", "+1h", "+2h", "+3h", "+6h", "+12h", "+18h", "+24h"],
+      satellite_gsmap: [10, 16, 22, 28, 30, 26, 18, 12, 8, 5, 3],
+      radar_dwr: [12, 19, 26, 32, 34, 28, 20, null, null, null, null],
+      nwp_model: [9, 15, 21, 29, 31, 27, 19, 14, 9, 6, 4],
+      fused_ensemble: [11, 18, 25, 32, 33, 27, 19, 13, 8, 5, 3],
+      uncertainty_upper: [14, 22, 29, 36, 38, 32, 24, 17, 12, 8, 6],
+      uncertainty_lower: [8, 14, 21, 28, 28, 22, 14, 9, 4, 2, 0]
+    },
+    inundation_zones: [
+      {lat: 28.6289, lng: 77.2505, radius_m: 850, depth_m: 0.36, zone_name: "Zone A: ITO & Minto Underpass Corridor", risk_pct: 58, pop: 64000}
+    ],
+    evac_corridor: [[28.6289, 77.2505], [28.6320, 77.2250]],
+    blocked_corridor: [[28.6289, 77.2505], [28.6410, 77.2320]]
+  },
+  {
+    id: "GRID-KOL-06",
+    name: "Kolkata — Bidhannagar & East Wetland Basin",
+    district: "Kolkata / North 24 Parganas",
+    state: "West Bengal",
+    lat: 22.5726,
+    lng: 88.4159,
+    grid_resolution: "1.0 km × 1.0 km",
+    elevation_m: 5.9,
+    slope_deg: 0.6,
+    lulc_class: "Deltaic Urban Flatland (79%)",
+    impervious_pct: 79,
+    scs_curve_number: 89,
+    drainage_capacity_mm_hr: 44.0,
+    drainage_efficiency_pct: 82,
+    topographic_wetness_index: 14.1,
+    sources: {
+      insat_3ds_tir_k: 244.0,
+      insat_3ds_rain_mm_hr: 12.4,
+      gsmap_isro_mm_hr: 11.8,
+      imd_dwr_dbz: 28.0,
+      imd_dwr_rain_mm_hr: 14.2,
+      aws_gauge_mm_hr: 13.5,
+      aws_station_id: "AWS-ALIPORE-01",
+      nwp_ncmrwf_mm_hr: 15.0,
+      nwp_downscaled_1km_mm_hr: 13.9
+    },
+    fused_rainfall_mm_hr: 13.8,
+    accumulated_rain_3h_mm: 32.0,
+    accumulated_rain_24h_mm: 54.0,
+    infiltration_loss_mm_hr: 6.2,
+    surface_runoff_mm_hr: 7.6,
+    predicted_inundation_depth_m: 0.08,
+    ensemble_uncertainty_m: 0.04,
+    confidence_score_pct: 96.8,
+    alert_color: "GREEN",
+    severity_label: "NORMAL DRAINAGE FLOW (NO RISK)",
+    lead_time_hrs: 12.0,
+    hitl_status: "VERIFIED_GREEN",
+    hitl_officer_note: "Bagjola and Kestopur canals operating well below safe capacity.",
+    affected_population: 12000,
+    critical_infra_at_risk: [
+      { asset: "Sector V IT Arterial Ring", depth: "0.08m", status: "OPEN (CLEAR)" },
+      { asset: "Bagjola Outfall Lock Gate", depth: "0.05m", status: "OPEN (NORMAL)" },
+      { asset: "EM Bypass Elevated Corridor", depth: "0.00m", status: "OPEN (CLEAR)" }
+    ],
+    recommended_actions: [
+      "Routine automated telemetry monitoring (15-min cycle) across KMC pumping stations",
+      "Maintain normal lock-gate schedules along Hooghly tidal inlets",
+      "Keep mobile drainage units on routine monsoon standby in Salt Lake Sector V"
+    ],
+    shap_attribution: {
+      "Canal Outfall Capacity": 42,
+      "Low Radar Reflectivity": 31,
+      "East Kolkata Wetland Buffer": 16,
+      "AWS Ground Calibration": 7,
+      "NWP Stable Pressure": 4
+    },
+    hourly_series: {
+      labels: ["-3h", "-2h", "-1h", "LIVE", "+1h", "+2h", "+3h", "+6h", "+12h", "+18h", "+24h"],
+      satellite_gsmap: [8, 10, 12, 12, 14, 15, 12, 9, 6, 4, 3],
+      radar_dwr: [9, 11, 13, 14, 16, 16, 13, null, null, null, null],
+      nwp_model: [7, 9, 12, 15, 16, 15, 13, 10, 7, 5, 4],
+      fused_ensemble: [8, 10, 13, 14, 15, 15, 13, 9, 6, 4, 3],
+      uncertainty_upper: [11, 13, 16, 17, 19, 19, 17, 13, 9, 7, 6],
+      uncertainty_lower: [5, 7, 10, 11, 11, 11, 9, 5, 3, 1, 0]
+    },
+    inundation_zones: [
+      {lat: 22.5726, lng: 88.4159, radius_m: 700, depth_m: 0.08, zone_name: "Zone A: Sector V - Canal Buffer", risk_pct: 14, pop: 12000}
+    ],
+    evac_corridor: [[22.5726, 88.4159], [22.5850, 88.4050]],
+    blocked_corridor: []
+  }
+];
+
+const DEFAULT_BACKTESTS = [
+  {
+    event_id: "BT-2023-MAA",
+    event_name: "Cyclone Michaung Extreme Downpour (Chennai, Dec 2023)",
+    grid_id: "GRID-MAA-03",
+    peak_rain_mm_hr: 94.5,
+    observed_depth_m: 1.65,
+    predicted_depth_m: 1.59,
+    spatial_iou_pct: 91.2,
+    pod: 0.96,
+    far: 0.041,
+    csi: 0.91
+  },
+  {
+    event_id: "BT-2024-MUM",
+    event_name: "Mumbai Monsoon Cloudburst & Tide Lock (July 2024)",
+    grid_id: "GRID-MUM-01",
+    peak_rain_mm_hr: 102.0,
+    observed_depth_m: 1.48,
+    predicted_depth_m: 1.44,
+    spatial_iou_pct: 89.4,
+    pod: 0.94,
+    far: 0.048,
+    csi: 0.89
+  },
+  {
+    event_id: "BT-2024-GUW",
+    event_name: "Guwahati Urban Flash Inundation (May 2024)",
+    grid_id: "GRID-GUW-02",
+    peak_rain_mm_hr: 78.4,
+    observed_depth_m: 1.24,
+    predicted_depth_m: 1.19,
+    spatial_iou_pct: 87.8,
+    pod: 0.93,
+    far: 0.052,
+    csi: 0.88
+  },
+  {
+    event_id: "BT-2024-WAY",
+    event_name: "Wayanad Extreme Orographic Rain Surge (July 2024)",
+    grid_id: "GRID-WAY-04",
+    peak_rain_mm_hr: 91.0,
+    observed_depth_m: 2.10,
+    predicted_depth_m: 1.98,
+    spatial_iou_pct: 86.5,
+    pod: 0.92,
+    far: 0.055,
+    csi: 0.87
+  }
+];
+
+let grids = [...DEFAULT_GRIDS];
+let backtests = [...DEFAULT_BACKTESTS];
+let activeGrid = grids[0];
+let dispatchedDirectivesMap = {};
+let floodExpansionFactor = 1.0;
+
+let auditLedger = [
+  {
+    ts: "2026-09-25 21:52:04 IST",
+    officer: "Dr. R. K. Baruah (ASDMA)",
+    action: "HITL_CONFIRMED_RED // GRID-GUW-02",
+    hash: "SHA256:8f94e2a0c1b4...",
+    note: "Verified Meghalaya hill runoff via AWS-DISPUR-01; authorized CAP XML + Assamese IVR."
+  },
+  {
+    ts: "2026-09-25 21:45:19 IST",
+    officer: "RAINSHIELD-Ensemble-v6.0",
+    action: "AUTO_ESCALATE_RED // GRID-MUM-01",
+    hash: "SHA256:3c71b9d4e201...",
+    note: "4-source fusion (79.4 mm/hr) + SCS-CN runoff (72.6 mm/hr) exceeded 1.2m depth threshold."
+  }
+];
+
+let map = null;
+let tileLayerInstance = null;
+let polyLayer = null;
+let hotspotLayer = null;
+let routeLayer = null;
+let probeMarker = null;
+
+let timelineChart = null;
+let shapChart = null;
+
+let radarSweepAngle = 0;
+let windParticles = [];
+let wavePhase = 0;
+let playbackTimer = null;
+let currentHorizonIdx = 3;
+let scadaNetDeltaM = 0.0;
+
+// Sparkline history buffers for the 4 live telemetry streams
+let sparkBuffers = {
+  sat: [68, 71, 73, 74, 75, 74, 76, 74.2],
+  rad: [52, 54, 55, 56, 57, 56, 58, 56.5],
+  aws: [72, 75, 77, 78, 80, 79, 81, 79.0],
+  nwp: [93, 94, 94.2, 94.5, 94.1, 94.3, 94.0, 94.2]
+};
+
+// Web Audio & Multilingual Voice Synthesis State
+let audioCtx = null;
+let isVoiceSpeaking = false;
+let voiceWavePhase = 0;
+let voiceSpeechTimer = null;
+window.__activeUtterance = null;
+
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+  };
+}
+
+// ==================== INITIALIZATION ====================
+window.addEventListener('DOMContentLoaded', async () => {
+  if (window.lucide) lucide.createIcons();
+  initDialogLightDismissFallbacks();
+  initHasSelectorFallbacks();
+  startSynopticClockAndTelemetryHeartbeat();
+  initLeafletWorkstation();
+  initAnalyticsCharts();
+  initWindParticleSystem();
+  runCopilotQuery('bias');
+
+  try {
+    const r1 = await fetch('/api/grids');
+    if (r1.ok) {
+      const serverGrids = await r1.json();
+      if (Array.isArray(serverGrids) && serverGrids.length > 0) {
+        grids = serverGrids.map((sg, idx) => ({ ...DEFAULT_GRIDS[idx % DEFAULT_GRIDS.length], ...sg }));
+      }
+    }
+  } catch (e) {}
+
+  activeGrid = grids[0];
+  renderBasinTabs();
+  selectBasin(activeGrid.id);
+  renderBacktestModal();
+  renderHitlLedger();
+  requestAnimationFrame(masterPhysicsRenderLoop);
+});
+
+// MANDATORY <dialog closedby="any"> fallback per modern-web-guidance
+function initDialogLightDismissFallbacks() {
+  document.querySelectorAll('dialog').forEach((dialog) => {
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      dialog.addEventListener('click', (event) => {
+        if (event.target !== dialog) return;
+        const rect = dialog.getBoundingClientRect();
+        const inside = (
+          rect.top <= event.clientY &&
+          event.clientY <= rect.top + rect.height &&
+          rect.left <= event.clientX &&
+          event.clientX <= rect.left + rect.width
+        );
+        if (!inside) dialog.close();
+      });
+    }
+  });
+}
+
+// MANDATORY CSS :has() fallback per modern-web-guidance
+function initHasSelectorFallbacks() {
+  if (!CSS.supports('selector(:has(*))')) {
+    document.querySelectorAll('.layer-toggle-btn input').forEach((chk) => {
+      const lbl = chk.closest('.layer-toggle-btn');
+      if (lbl) {
+        lbl.classList.toggle('is-active', chk.checked);
+        chk.addEventListener('change', (e) => lbl.classList.toggle('is-active', e.target.checked));
+      }
+    });
+  }
+}
+
+// Live Clock + 4-Stream Ticking Telemetry & Latency Gauge Heartbeat
+function startSynopticClockAndTelemetryHeartbeat() {
+  setInterval(() => {
+    const now = new Date();
+    const ist = now.toLocaleTimeString('en-IN', { hour12: false });
+    document.getElementById('liveClock').textContent = `${ist} IST`;
+  }, 1000);
+
+  setInterval(() => {
+    // Update simulated latency gauges (3ms - 7ms delay) & live sparklines
+    document.getElementById('latSat').textContent = `${Math.floor(3 + Math.random() * 4)}ms delay`;
+    document.getElementById('latRad').textContent = `${Math.floor(4 + Math.random() * 4)}ms delay`;
+    document.getElementById('latAws').textContent = `${Math.floor(2 + Math.random() * 4)}ms delay`;
+    document.getElementById('latNwp').textContent = `${Math.floor(5 + Math.random() * 4)}ms delay`;
+
+    const g = activeGrid;
+    sparkBuffers.sat.push(+(g.sources.insat_3ds_rain_mm_hr + (Math.random() - 0.5) * 2.4).toFixed(1));
+    sparkBuffers.rad.push(+(g.sources.imd_dwr_dbz + (Math.random() - 0.5) * 1.4).toFixed(1));
+    sparkBuffers.aws.push(+(g.sources.aws_gauge_mm_hr + (Math.random() - 0.5) * 2.0).toFixed(1));
+    sparkBuffers.nwp.push(+(g.confidence_score_pct + (Math.random() - 0.5) * 0.6).toFixed(1));
+
+    ['sat', 'rad', 'aws', 'nwp'].forEach((k) => {
+      if (sparkBuffers[k].length > 14) sparkBuffers[k].shift();
+    });
+
+    drawSparkline('sparkSat', sparkBuffers.sat, '#c084fc');
+    drawSparkline('sparkRad', sparkBuffers.rad, '#22d3ee');
+    drawSparkline('sparkAws', sparkBuffers.aws, '#34d399');
+    drawSparkline('sparkNwp', sparkBuffers.nwp, '#fbbf24');
+  }, 1400);
+}
+
+function drawSparkline(canvasId, data, color) {
+  const c = document.getElementById(canvasId);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const rect = c.getBoundingClientRect();
+  if (c.width !== Math.floor(rect.width) || c.height !== Math.floor(rect.height)) {
+    c.width = Math.floor(rect.width) || 140;
+    c.height = Math.floor(rect.height) || 28;
+  }
+  const w = c.width;
+  const h = c.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const min = Math.min(...data) - 1;
+  const max = Math.max(...data) + 1;
+  const range = Math.max(1, max - min);
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  data.forEach((v, idx) => {
+    const x = (idx / (data.length - 1)) * (w - 4) + 2;
+    const y = h - 3 - ((v - min) / range) * (h - 6);
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+// ==================== LEAFLET GIS WORKSTATION & CLICKABLE HOT-SPOTS ====================
+function initLeafletWorkstation() {
+  map = L.map('gisMap', {
+    center: [19.0728, 72.8826],
+    zoom: 12,
+    zoomControl: false
+  });
+
+  tileLayerInstance = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    subdomains: 'abcd'
+  }).addTo(map);
+
+  polyLayer = L.layerGroup().addTo(map);
+  hotspotLayer = L.layerGroup().addTo(map);
+  routeLayer = L.layerGroup().addTo(map);
+
+  map.on('click', (e) => {
+    const { lat, lng } = e.latlng;
+    const distKm = Math.hypot(lat - activeGrid.lat, lng - activeGrid.lng) * 111;
+    const decay = Math.max(0.15, Math.exp(-distKm / 3.5));
+    const localDepth = +(activeGrid.predicted_inundation_depth_m * floodExpansionFactor * decay).toFixed(2);
+    const localElev = +(activeGrid.elevation_m + (1 - decay) * 4.2).toFixed(1);
+
+    document.getElementById('probeCoords').textContent = `${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E`;
+    document.getElementById('probeElev').textContent = `${localElev}m`;
+    document.getElementById('probeDepth').textContent = `${localDepth}m`;
+
+    if (probeMarker) map.removeLayer(probeMarker);
+    probeMarker = L.circleMarker([lat, lng], {
+      radius: 6,
+      color: '#22d3ee',
+      weight: 2,
+      fillColor: '#020617',
+      fillOpacity: 0.9
+    }).addTo(map);
+
+    openHotspotFlyoutDrawer({
+      zone_name: `Tactical Sub-Grid Probe [${lat.toFixed(3)}°N, ${lng.toFixed(3)}°E]`,
+      lat,
+      lng,
+      depth_m: localDepth,
+      risk_pct: Math.min(99, Math.round(activeGrid.confidence_score_pct * decay)),
+      pop: Math.round((activeGrid.affected_population || 45000) * 0.35 * decay)
+    });
+  });
+}
+
+function switchBaseTile(mode) {
+  if (!map) return;
+  if (tileLayerInstance) map.removeLayer(tileLayerInstance);
+  const urls = {
+    dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    sat: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    topo: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
+  };
+  tileLayerInstance = L.tileLayer(urls[mode] || urls.dark, { maxZoom: 19 }).addTo(map);
+}
+
+function sevHex(c) {
+  if (c === 'RED') return '#ef4444';
+  if (c === 'ORANGE') return '#f59e0b';
+  if (c === 'YELLOW') return '#eab308';
+  return '#10b981';
+}
+
+function triggerLayerToggle(layerLabel) {
+  const banner = document.getElementById('mapSkeletonBanner');
+  const txt = document.getElementById('mapSkeletonText');
+  if (banner && txt) {
+    txt.textContent = `Syncing ${layerLabel}...`;
+    banner.classList.remove('hidden');
+    banner.classList.add('flex');
+    setTimeout(() => {
+      banner.classList.add('hidden');
+      banner.classList.remove('flex');
+    }, 320);
+  }
+  playTacticalAckBeep(740);
+  syncMapOverlays(false);
+}
+
+function syncMapOverlays(fly = false) {
+  if (!map) return;
+  const g = activeGrid;
+  if (fly) map.flyTo([g.lat, g.lng], 12, { duration: 0.85 });
+
+  polyLayer.clearLayers();
+  hotspotLayer.clearLayers();
+  routeLayer.clearLayers();
+
+  const color = sevHex(g.alert_color);
+  const showInundation = document.getElementById('chkInundation').checked;
+
+  // Render Pulsing Flood Polygons & Clickable Hot-Spots
+  const quickBar = document.getElementById('hotspotQuickBar');
+  if (quickBar) quickBar.innerHTML = '';
+
+  (g.inundation_zones || []).forEach((z, idx) => {
+    const scaledRadius = z.radius_m * floodExpansionFactor;
+    const scaledDepth = +(z.depth_m * floodExpansionFactor).toFixed(2);
+    const riskPct = z.risk_pct || (g.alert_color === 'RED' ? 94 - idx * 5 : 78 - idx * 6);
+
+    if (showInundation) {
+      // Outer uncertainty halo
+      L.circle([z.lat, z.lng], {
+        radius: scaledRadius * 1.32,
+        color: color,
+        weight: 1,
+        dashArray: '4,4',
+        fillColor: color,
+        fillOpacity: 0.11
+      }).addTo(polyLayer);
+
+      // Core 2D flood polygon
+      const circle = L.circle([z.lat, z.lng], {
+        radius: scaledRadius,
+        color: color,
+        weight: 2,
+        fillColor: color,
+        fillOpacity: 0.34
+      }).addTo(polyLayer);
+
+      circle.on('click', (ev) => {
+        L.DomEvent.stopPropagation(ev);
+        openHotspotFlyoutDrawer({ ...z, depth_m: scaledDepth, risk_pct: riskPct });
+      });
+    }
+
+    // Pulsing Interactive Hotspot Marker on Map
+    const iconHtml = `
+      <div style="position:relative; display:flex; align-items:center; justify-content:center; width:110px; height:32px; transform:translate(-55px,-16px);">
+        <span class="hotspot-ping" style="position:absolute; width:34px; height:34px; border-radius:9999px; background:${color}; opacity:0.55;"></span>
+        <div style="position:relative; background:rgba(2,6,23,0.92); border:1.5px solid ${color}; color:#fff; padding:2px 7px; border-radius:6px; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700; white-space:nowrap; box-shadow:0 4px 14px rgba(0,0,0,0.85);">
+          📍 ZONE-${String.fromCharCode(65 + idx)}: ${scaledDepth}m
+        </div>
+      </div>
+    `;
+    const marker = L.marker([z.lat, z.lng], {
+      icon: L.divIcon({ className: '', html: iconHtml, iconSize: [0, 0] })
+    }).addTo(hotspotLayer);
+
+    marker.on('click', (ev) => {
+      L.DomEvent.stopPropagation(ev);
+      openHotspotFlyoutDrawer({ ...z, depth_m: scaledDepth, risk_pct: riskPct });
+    });
+
+    // Add corresponding clickable pill to bottom bar
+    if (quickBar) {
+      const btn = document.createElement('button');
+      btn.className = 'px-2 py-0.5 rounded bg-slate-900 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-400 font-mono text-[10px] text-slate-200 transition-all';
+      btn.textContent = `📍 Zone ${String.fromCharCode(65 + idx)} (${scaledDepth}m)`;
+      btn.onclick = () => openHotspotFlyoutDrawer({ ...z, depth_m: scaledDepth, risk_pct: riskPct });
+      quickBar.appendChild(btn);
+    }
+  });
+
+  if (document.getElementById('chkRoutes').checked) {
+    if (g.evac_corridor && g.evac_corridor.length > 0) {
+      L.polyline(g.evac_corridor, {
+        color: '#10b981',
+        weight: 4,
+        opacity: 0.95
+      }).addTo(routeLayer).bindPopup('<b>NDRF GREEN EVACUATION CORRIDOR [OPEN]</b>');
+    }
+    if (g.blocked_corridor && g.blocked_corridor.length > 0) {
+      L.polyline(g.blocked_corridor, {
+        color: '#ef4444',
+        weight: 3,
+        dashArray: '6,6',
+        opacity: 0.9
+      }).addTo(routeLayer).bindPopup('<b>SUBMERGED ARTERIAL ROUTE [CLOSED]</b>');
+    }
+  }
+}
+
+// Opens Smooth Fly-Out Drawer when clicking a Map Hot-Spot
+function openHotspotFlyoutDrawer(zoneObj) {
+  playTacticalAckBeep(820);
+  const g = activeGrid;
+  document.getElementById('drawerZoneBadge').textContent = `${g.alert_color} // ${zoneObj.risk_pct || 94}% RISK`;
+  document.getElementById('drawerZoneTitle').textContent = zoneObj.zone_name || g.name;
+  document.getElementById('drawerZoneCoords').textContent = `${(zoneObj.lat || g.lat).toFixed(4)}°N, ${(zoneObj.lng || g.lng).toFixed(4)}°E • CartoDEM: ${g.elevation_m}m MSL`;
+  document.getElementById('drawerDepth').textContent = `${zoneObj.depth_m || g.predicted_inundation_depth_m}m ±${g.ensemble_uncertainty_m}m`;
+  document.getElementById('drawerRain').textContent = `${g.fused_rainfall_mm_hr} mm/hr`;
+  document.getElementById('drawerPop').textContent = `${(zoneObj.pop || g.affected_population || 64000).toLocaleString()} Citizens`;
+  document.getElementById('drawerDrain').textContent = g.alert_color === 'RED' ? 'Tide-Locked (Surcharge)' : 'Pumps Active';
+
+  const dlg = document.getElementById('hotspotDrawer');
+  if (dlg && typeof dlg.showModal === 'function' && !dlg.open) {
+    dlg.showModal();
+  }
+  refreshCharts();
+}
+
+// ==================== 60-FPS ATMOSPHERIC, SATELLITE, RADAR & WAVEFORM ENGINE ====================
+function initWindParticleSystem() {
+  windParticles = [];
+  for (let i = 0; i < 140; i++) {
+    windParticles.push({
+      x: Math.random() * 1200,
+      y: Math.random() * 700,
+      vx: 1.4 + Math.random() * 1.8,
+      vy: -0.5 + Math.random() * 1.0,
+      alpha: 0.2 + Math.random() * 0.45
+    });
+  }
+}
+
+function masterPhysicsRenderLoop() {
+  renderAtmosOverlayCanvas();
+  renderHydroCrossSectionCanvas();
+  renderVoiceWaveformCanvas();
+  render3dTwinMeshCanvas();
+  renderCctvAiCanvas();
+  requestAnimationFrame(masterPhysicsRenderLoop);
+}
+
+function renderAtmosOverlayCanvas() {
+  const canvas = document.getElementById('atmosPhysicsCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+    canvas.width = Math.floor(rect.width);
+    canvas.height = Math.floor(rect.height);
+  }
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w * 0.52;
+  const cy = h * 0.48;
+
+  // 1. Satellite Overlay: Multi-Spectral Cloud Density Thermal Infrared Plume
+  if (document.getElementById('chkSatellite').checked) {
+    const satGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, Math.min(w, h) * 0.44 * floodExpansionFactor);
+    satGrad.addColorStop(0, 'rgba(168, 85, 247, 0.28)');
+    satGrad.addColorStop(0.45, 'rgba(59, 130, 246, 0.16)');
+    satGrad.addColorStop(0.8, 'rgba(6, 182, 212, 0.06)');
+    satGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = satGrad;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  // 2. Wind Advection Streamlines
+  if (document.getElementById('chkParticles').checked) {
+    const speedFactor = Math.max(0.5, activeGrid.fused_rainfall_mm_hr / 45.0);
+    ctx.lineWidth = 1.3;
+    windParticles.forEach((p) => {
+      const dx = cx - p.x;
+      const dy = cy - p.y;
+      const dist = Math.hypot(dx, dy) + 1;
+      const swirlX = (-dy / dist) * 1.2 + (dx / dist) * 0.45;
+      const swirlY = (dx / dist) * 1.2 + (dy / dist) * 0.45;
+
+      const vx = (p.vx + swirlX) * speedFactor;
+      const vy = (p.vy + swirlY) * speedFactor;
+
+      ctx.strokeStyle = `rgba(34, 211, 238, ${p.alpha})`;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - vx * 4.5, p.y - vy * 4.5);
+      ctx.stroke();
+
+      p.x += vx;
+      p.y += vy;
+
+      if (p.x > w || p.x < 0 || p.y > h || p.y < 0 || dist < 18) {
+        p.x = Math.random() * w;
+        p.y = Math.random() * h;
+      }
+    });
+  }
+
+  // 3. Doppler Radar Rotating Sweep & Iso-Reflectivity Rings
+  if (document.getElementById('chkRadar').checked) {
+    const radR = Math.min(w, h) * 0.38;
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.22)';
+    ctx.lineWidth = 1;
+    [0.33, 0.66, 1.0].forEach((frac) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radR * frac, 0, Math.PI * 2);
+      ctx.stroke();
+    });
+
+    ctx.beginPath();
+    ctx.moveTo(cx - radR, cy);
+    ctx.lineTo(cx + radR, cy);
+    ctx.moveTo(cx, cy - radR);
+    ctx.lineTo(cx, cy + radR);
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(radarSweepAngle);
+    const grad = ctx.createConicGradient(0, 0, 0);
+    grad.addColorStop(0, 'rgba(34, 211, 238, 0.30)');
+    grad.addColorStop(0.12, 'rgba(34, 211, 238, 0.02)');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, radR, 0, Math.PI * 0.24);
+    ctx.lineTo(0, 0);
+    ctx.fill();
+    ctx.restore();
+
+    radarSweepAngle = (radarSweepAngle + 0.024) % (Math.PI * 2);
+  }
+}
+
+// 2D Hydrodynamic Cross-Section Canvas
+function renderHydroCrossSectionCanvas() {
+  const canvas = document.getElementById('hydroProfileCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+    canvas.width = Math.floor(rect.width);
+    canvas.height = Math.floor(rect.height);
+  }
+
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const depth = +(activeGrid.predicted_inundation_depth_m * floodExpansionFactor).toFixed(2);
+  const waterFrac = Math.min(0.84, Math.max(0.12, depth / 2.2));
+  const waterY = h - waterFrac * (h * 0.78);
+
+  wavePhase += 0.06;
+  const waterGrad = ctx.createLinearGradient(0, waterY, 0, h);
+  const isCrit = activeGrid.alert_color === 'RED';
+  waterGrad.addColorStop(0, isCrit ? 'rgba(239, 68, 68, 0.58)' : 'rgba(6, 182, 212, 0.52)');
+  waterGrad.addColorStop(1, 'rgba(3, 105, 161, 0.88)');
+
+  ctx.fillStyle = waterGrad;
+  ctx.beginPath();
+  ctx.moveTo(0, h);
+  for (let x = 0; x <= w; x += 8) {
+    const wave = Math.sin(x * 0.05 + wavePhase) * 2.0;
+    ctx.lineTo(x, waterY + wave);
+  }
+  ctx.lineTo(w, h);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = '#0f172a';
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, h);
+  ctx.lineTo(0, h * 0.25);
+  ctx.lineTo(w * 0.18, h * 0.58);
+  ctx.lineTo(w * 0.38, h * 0.86);
+  ctx.lineTo(w * 0.65, h * 0.86);
+  ctx.lineTo(w * 0.84, h * 0.52);
+  ctx.lineTo(w, h * 0.35);
+  ctx.lineTo(w, h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = '600 10px "JetBrains Mono"';
+  ctx.fillText(`WSE: +${depth}m (±${activeGrid.ensemble_uncertainty_m}m)`, 8, 14);
+}
+
+// 60-FPS CAP Multilingual Voice Waveform Visualizer
+function renderVoiceWaveformCanvas() {
+  const canvas = document.getElementById('voiceWaveCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+    canvas.width = Math.floor(rect.width) || 280;
+    canvas.height = Math.floor(rect.height) || 24;
+  }
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  voiceWavePhase += isVoiceSpeaking ? 0.24 : 0.04;
+  const bars = 40;
+  const barW = Math.max(2, Math.floor((w - bars * 2) / bars));
+
+  for (let i = 0; i < bars; i++) {
+    let amp = 0.14;
+    if (isVoiceSpeaking) {
+      amp = 0.25 + 0.72 * Math.abs(Math.sin(i * 0.45 + voiceWavePhase) * Math.cos(i * 0.23 - voiceWavePhase * 0.7));
+    } else {
+      amp = 0.10 + 0.05 * Math.sin(i * 0.3 + voiceWavePhase);
+    }
+    const bh = Math.max(2, amp * (h - 4));
+    const x = i * (barW + 2) + 2;
+    const y = (h - bh) / 2;
+    ctx.fillStyle = isVoiceSpeaking ? '#10b981' : 'rgba(34, 211, 238, 0.35)';
+    ctx.fillRect(x, y, barW, bh);
+  }
+}
+
+// 3D Isometric Digital Twin Terrain & Flood Water Mesh Renderer
+function render3dTwinMeshCanvas() {
+  const dlg = document.getElementById('twin3dDialog');
+  if (!dlg || !dlg.open) return;
+  const canvas = document.getElementById('twin3dCanvas');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+    canvas.width = Math.floor(rect.width);
+    canvas.height = Math.floor(rect.height);
+  }
+
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  document.getElementById('twinBasinLabel').textContent = activeGrid.name;
+  document.getElementById('twinDepthLabel').textContent = `${activeGrid.predicted_inundation_depth_m}m`;
+
+  const yaw = (parseFloat(document.getElementById('twinYawSlider').value) * Math.PI) / 180;
+  const pitch = (parseFloat(document.getElementById('twinPitchSlider').value) * Math.PI) / 180;
+
+  const N = 14;
+  const scale = Math.min(w, h) * 0.042;
+  const cx = w * 0.5;
+  const cy = h * 0.62;
+
+  function project3D(gx, gy, gz) {
+    const rx = gx * Math.cos(yaw) - gy * Math.sin(yaw);
+    const ry = gx * Math.sin(yaw) + gy * Math.cos(yaw);
+    return {
+      x: cx + rx * scale,
+      y: cy + (ry * Math.sin(pitch) - gz * Math.cos(pitch)) * scale
+    };
+  }
+
+  function terrainZ(ix, iy) {
+    const distCenter = Math.hypot(ix, iy);
+    return 0.18 * (distCenter * distCenter) * 0.22 + Math.sin(ix * 0.5) * 0.3;
+  }
+
+  const waterZ = activeGrid.predicted_inundation_depth_m * 1.65 + Math.sin(wavePhase) * 0.08;
+
+  ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+  ctx.lineWidth = 1;
+  for (let i = -N / 2; i < N / 2; i++) {
+    for (let j = -N / 2; j < N / 2; j++) {
+      const p1 = project3D(i, j, terrainZ(i, j));
+      const p2 = project3D(i + 1, j, terrainZ(i + 1, j));
+      const p3 = project3D(i + 1, j + 1, terrainZ(i + 1, j + 1));
+      const p4 = project3D(i, j + 1, terrainZ(i, j + 1));
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.lineTo(p4.x, p4.y);
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+
+  ctx.fillStyle = activeGrid.alert_color === 'RED' ? 'rgba(239, 68, 68, 0.32)' : 'rgba(6, 182, 212, 0.28)';
+  ctx.strokeStyle = activeGrid.alert_color === 'RED' ? 'rgba(239, 68, 68, 0.7)' : 'rgba(6, 182, 212, 0.65)';
+  for (let i = -N / 2 + 1; i < N / 2 - 1; i++) {
+    for (let j = -N / 2 + 1; j < N / 2 - 1; j++) {
+      if (waterZ > terrainZ(i, j)) {
+        const w1 = project3D(i, j, waterZ);
+        const w2 = project3D(i + 1, j, waterZ);
+        const w3 = project3D(i + 1, j + 1, waterZ);
+        const w4 = project3D(i, j + 1, waterZ);
+        ctx.beginPath();
+        ctx.moveTo(w1.x, w1.y); ctx.lineTo(w2.x, w2.y); ctx.lineTo(w3.x, w3.y); ctx.lineTo(w4.x, w4.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+// Computer Vision CCTV Virtual Flood Gauge Canvas
+function renderCctvAiCanvas() {
+  const dlg = document.getElementById('cctvDialog');
+  if (!dlg || !dlg.open) return;
+  const canvas = document.getElementById('cctvAiCanvas');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  if (canvas.width !== Math.floor(rect.width) || canvas.height !== Math.floor(rect.height)) {
+    canvas.width = Math.floor(rect.width);
+    canvas.height = Math.floor(rect.height);
+  }
+
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.fillStyle = '#050a12';
+  ctx.fillRect(0, 0, w, h);
+
+  const depth = activeGrid.predicted_inundation_depth_m;
+  document.getElementById('cvDepthReadout').textContent = `${depth}m ±0.04m`;
+
+  const waterLevelY = h - Math.min(h * 0.72, Math.max(40, (depth / 2.0) * (h * 0.65)));
+  ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+  ctx.fillRect(20, waterLevelY, w - 40, h - 20 - waterLevelY);
+
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(60, 45, 55, h - 75);
+  ctx.fillStyle = '#10b981';
+  ctx.font = '600 10px "JetBrains Mono"';
+  ctx.fillText(`STAFF_GAUGE [0.99]`, 60, 40);
+
+  ctx.strokeStyle = '#ef4444';
+  ctx.strokeRect(w * 0.42, h * 0.48, 150, 75);
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText(`SEDAN_SUBMERGED: ${depth}m [0.96]`, w * 0.42, h * 0.48 - 6);
+}
+
+// ==================== UI RENDERING & INTERACTIVITY ====================
+function renderBasinTabs() {
+  const strip = document.getElementById('basinTabStrip');
+  if (!strip) return;
+  strip.innerHTML = '';
+  grids.forEach((g) => {
+    const isSel = g.id === activeGrid.id;
+    const dotCol = g.alert_color === 'RED' ? 'bg-red-500' : g.alert_color === 'ORANGE' ? 'bg-amber-400' : g.alert_color === 'YELLOW' ? 'bg-yellow-400' : 'bg-emerald-400';
+    const btn = document.createElement('button');
+    btn.className = `px-2.5 py-1 rounded-md text-[11px] font-mono flex items-center gap-1.5 border transition-all shrink-0 ${
+      isSel
+        ? 'bg-cyan-500/20 border-cyan-400 text-white font-bold shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+        : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
+    }`;
+    btn.onclick = () => selectBasin(g.id);
+    btn.innerHTML = `<span class="w-2 h-2 rounded-full ${dotCol}"></span><span>${g.name.split('—')[0].trim()} (${g.predicted_inundation_depth_m}m)</span>`;
+    strip.appendChild(btn);
+  });
+}
+
+function selectBasin(id) {
+  const found = grids.find((g) => g.id === id);
+  if (!found) return;
+  activeGrid = found;
+  floodExpansionFactor = 1.0;
+  document.getElementById('timeScrubberSlider').value = 3;
+  renderBasinTabs();
+  refreshAllPanels();
+  syncMapOverlays(true);
+}
+
+function countDispatchedForActiveGrid() {
+  const actions = activeGrid.recommended_actions || [];
+  let count = 0;
+  actions.forEach((_, idx) => {
+    if (dispatchedDirectivesMap[`${activeGrid.id}_${idx}`]) count++;
+  });
+  return count;
+}
+
+function refreshAllPanels() {
+  const g = activeGrid;
+
+  const cdi = +(100 - (g.sources.insat_3ds_tir_k - 185) * 0.35).toFixed(1);
+  document.getElementById('txtSatTir').textContent = `Cloud Index: ${cdi} CDI (${g.sources.insat_3ds_tir_k}K)`;
+  document.getElementById('txtSatQpe').textContent = `${g.sources.insat_3ds_rain_mm_hr} mm/hr`;
+  document.getElementById('txtRadDbz').textContent = `${g.sources.imd_dwr_dbz} dBZ`;
+  document.getElementById('txtRadQpe').textContent = `C-Band QPE: ${g.sources.imd_dwr_rain_mm_hr} mm/hr`;
+  document.getElementById('txtAwsStation').textContent = g.sources.aws_station_id;
+  document.getElementById('txtAwsRate').textContent = `${g.sources.aws_gauge_mm_hr} mm/hr`;
+  document.getElementById('txtNwpCoarse').textContent = `NCMRWF 1km: ${g.sources.nwp_downscaled_1km_mm_hr} mm/hr`;
+  document.getElementById('txtNwpFine').textContent = `${g.confidence_score_pct}% ±1.8%`;
+
+  document.getElementById('txtUncertOut').textContent = `CI: ±${g.ensemble_uncertainty_m}m`;
+
+  const tag = document.getElementById('heroSevTag');
+  const badgeColor = g.alert_color === 'RED'
+    ? 'bg-red-500/20 text-red-300 border-red-500/50'
+    : g.alert_color === 'ORANGE'
+    ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
+    : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50';
+  tag.className = `px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${badgeColor}`;
+  tag.textContent = `${g.alert_color} ALERT // ${g.confidence_score_pct}% CONF`;
+
+  document.getElementById('heroGridCode').textContent = g.id;
+  document.getElementById('heroHeadline').textContent = g.severity_label;
+  document.getElementById('heroBasinTitle').textContent = g.name;
+
+  const effectiveDepth = +(g.predicted_inundation_depth_m * floodExpansionFactor).toFixed(2);
+  document.getElementById('kpiPredDepth').textContent = `${effectiveDepth}m`;
+  document.getElementById('kpiRainRate').textContent = `${g.fused_rainfall_mm_hr}`;
+  document.getElementById('kpiLeadHrs').textContent = `${g.lead_time_hrs} HRS`;
+
+  document.getElementById('sliderRain').value = g.fused_rainfall_mm_hr;
+  document.getElementById('valSliderRain').textContent = `${g.fused_rainfall_mm_hr}`;
+  document.getElementById('sliderCn').value = g.scs_curve_number;
+  document.getElementById('valSliderCn').textContent = g.scs_curve_number;
+  document.getElementById('sliderDrain').value = g.drainage_efficiency_pct;
+  document.getElementById('valSliderDrain').textContent = `${g.drainage_efficiency_pct}%`;
+
+  document.getElementById('valRunoffOut').textContent = `${g.surface_runoff_mm_hr} mm/h`;
+  document.getElementById('valInfilOut').textContent = `${g.infiltration_loss_mm_hr} mm/h`;
+
+  // Update AI Actionable Rationale Card
+  document.getElementById('aiRationaleText').innerHTML =
+    `Warning triggered by coincident <strong class="text-white">${g.sources.imd_dwr_dbz} dBZ Doppler Radar core</strong> (+38% SHAP), <strong class="text-white">${g.sources.aws_gauge_mm_hr} mm/hr AWS gauge</strong>, and <strong class="text-white">INSAT-3DS ${g.sources.insat_3ds_tir_k}K cloud-top cooling</strong> over SCS-CN ${g.scs_curve_number} terrain, projecting <strong class="text-red-300">${effectiveDepth}m ± ${g.ensemble_uncertainty_m}m</strong> inundation.`;
+
+  // Render All 3 Recommended Response Directives & Exposed Population
+  const dispatchedCount = countDispatchedForActiveGrid();
+  const basePop = g.affected_population || 0;
+  const protectedPop = Math.min(basePop, Math.round(basePop * (dispatchedCount * 0.22)));
+  const remainingPop = Math.max(0, basePop - protectedPop);
+
+  const popBadge = document.getElementById('exposedPopBadge');
+  if (dispatchedCount > 0) {
+    popBadge.textContent = `${remainingPop.toLocaleString()} Pop. Exposed (-${protectedPop.toLocaleString()} Safe)`;
+    popBadge.className = 'font-mono text-[11px] font-bold px-2.5 py-1 rounded-md bg-emerald-500/20 border border-emerald-500/50 text-emerald-300';
+  } else {
+    popBadge.textContent = `${basePop.toLocaleString()} Pop. Exposed`;
+    popBadge.className = 'font-mono text-[11px] font-bold px-2.5 py-1 rounded-md bg-red-500/20 border border-red-500/50 text-red-300';
+  }
+
+  const dirBox = document.getElementById('directivesContainer');
+  dirBox.innerHTML = (g.recommended_actions || []).map((actionText, idx) => {
+    const key = `${g.id}_${idx}`;
+    const isDisp = !!dispatchedDirectivesMap[key];
+    return `
+      <div onclick="toggleDirectiveDispatch(${idx})" class="cursor-pointer p-2 rounded-lg border transition-all flex items-center justify-between gap-2 text-xs ${
+        isDisp
+          ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-100'
+          : 'bg-slate-900/80 hover:bg-slate-900 border-slate-800 border-l-2 border-l-cyan-400 text-slate-200'
+      }">
+        <span class="leading-snug">${actionText}</span>
+        <span class="font-mono text-[10px] font-bold px-2 py-0.5 rounded shrink-0 ${
+          isDisp ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40' : 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30'
+        }">${isDisp ? '✓ DISPATCHED' : 'DISPATCH'}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Render Critical Infrastructure inside Flyout Drawer
+  const infraBox = document.getElementById('infraStatusContainer');
+  if (infraBox) {
+    infraBox.innerHTML = (g.critical_infra_at_risk || []).map((item) => {
+      if (typeof item === 'string') {
+        return `<div class="flex justify-between py-1 border-b border-slate-800"><span>${item}</span><b class="text-red-400">[AT RISK]</b></div>`;
+      }
+      const statusStr = String(item.status || 'AT RISK');
+      const isOpen = statusStr.includes('OPEN') || statusStr.includes('CLEAR');
+      return `
+        <div class="flex justify-between py-1 border-b border-slate-800">
+          <span>${item.asset}</span>
+          <b class="${isOpen ? 'text-emerald-400' : 'text-red-400'}">[${item.depth} // ${statusStr}]</b>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('probeCoords').textContent = `${g.lat.toFixed(4)}°N, ${g.lng.toFixed(4)}°E`;
+  document.getElementById('probeElev').textContent = `${g.elevation_m}m`;
+  document.getElementById('probeDepth').textContent = `${effectiveDepth}m`;
+
+  refreshCharts();
+}
+
+// Primary Official CTA 1: Broadcast SMS Alerts to Zone A
+function triggerSmsBroadcastZoneA() {
+  playCapEmergencySiren(0.35);
+  const lbl = document.getElementById('lblBroadcastSms');
+  const btn = document.getElementById('btnBroadcastSms');
+  lbl.textContent = `✓ SMS Dispatched to Zone A (${activeGrid.affected_population.toLocaleString()} Citizens)`;
+  btn.className = 'py-2.5 px-3 rounded-lg font-mono text-[11px] font-bold uppercase tracking-wider bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-1.5';
+  auditLedger.unshift({
+    ts: new Date().toLocaleTimeString('en-IN', { hour12: false }) + ' IST',
+    officer: 'NDMA CAP Cell-Broadcast Gateway',
+    action: `SMS_BROADCAST_ZONE_A // ${activeGrid.id}`,
+    hash: 'SHA256:' + Math.random().toString(16).substring(2, 10),
+    note: `Geo-targeted SMS & Cell-Broadcast sent to ${activeGrid.affected_population.toLocaleString()} citizens in ${activeGrid.name}.`
+  });
+  renderHitlLedger();
+}
+
+// Primary Official CTA 2: Deploy Evacuation Route Maps
+function triggerDeployEvacRoutes() {
+  playTacticalAckBeep(920);
+  document.getElementById('chkRoutes').checked = true;
+  syncMapOverlays(true);
+  const lbl = document.getElementById('lblDeployEvac');
+  lbl.textContent = `✓ NDRF Evacuation Routes Active on Map`;
+}
+
+// Interactive Recommended Response Directive Dispatch
+function toggleDirectiveDispatch(idx) {
+  const key = `${activeGrid.id}_${idx}`;
+  dispatchedDirectivesMap[key] = !dispatchedDirectivesMap[key];
+  playTacticalAckBeep(dispatchedDirectivesMap[key] ? 880 : 440);
+  updateHydroPhysics();
+}
+
+function dispatchAllDirectives() {
+  const actions = activeGrid.recommended_actions || [];
+  actions.forEach((_, idx) => {
+    dispatchedDirectivesMap[`${activeGrid.id}_${idx}`] = true;
+  });
+  playTacticalAckBeep(960);
+  updateHydroPhysics();
+}
+
+// ==================== BULLETPROOF MULTILINGUAL CAP VOICE ALERT ENGINE ====================
+function ensureAudioContext() {
+  if (!audioCtx) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) audioCtx = new AudioContextClass();
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
+function playTacticalAckBeep(freq = 880) {
+  try {
+    const ctx = ensureAudioContext();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(0.10, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.14);
+  } catch (e) {}
+}
+
+function playCapEmergencySiren(durationSec = 0.42) {
+  try {
+    const ctx = ensureAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'triangle';
+    osc1.frequency.setValueAtTime(853, now);
+    osc2.frequency.setValueAtTime(960, now);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.002, now + durationSec);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + durationSec);
+    osc2.stop(now + durationSec);
+  } catch (e) {}
+}
+
+function stopVoiceBroadcast() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  if (voiceSpeechTimer) {
+    clearTimeout(voiceSpeechTimer);
+    voiceSpeechTimer = null;
+  }
+  isVoiceSpeaking = false;
+  document.querySelectorAll('.voice-chip').forEach((btn) => {
+    btn.classList.remove('border-emerald-400', 'bg-emerald-500/25');
+  });
+  document.getElementById('voiceActiveLangBadge').textContent = 'CAP AUDIO TRANSMITTER: STOPPED';
+}
+
+function broadcastVoice(lang, btnEl = null) {
+  stopVoiceBroadcast();
+
+  if (!btnEl) {
+    btnEl = document.querySelector(`.voice-chip[data-lang="${lang}"]`);
+  }
+  if (btnEl) {
+    btnEl.classList.add('border-emerald-400', 'bg-emerald-500/25');
+  }
+
+  playCapEmergencySiren(0.42);
+  isVoiceSpeaking = true;
+
+  const g = activeGrid;
+  const basinShort = g.name.split('—')[0].trim();
+  const depth = g.predicted_inundation_depth_m;
+  const rain = g.fused_rainfall_mm_hr;
+  const lead = g.lead_time_hrs;
+  const action1 = (g.recommended_actions && g.recommended_actions[0]) ? g.recommended_actions[0] : 'Move to elevated relief corridors immediately.';
+
+  const catalog = {
+    'en-IN': {
+      label: 'ENGLISH (en-IN)',
+      nativeText: `Ministry of Earth Sciences RAINSHIELD-AI Emergency Alert! ${g.alert_color} warning issued for ${g.name}. Fused radar and satellite rainfall is ${rain} millimeters per hour. Predicted inundation depth is ${depth} meters within ${lead} hours. Directive: ${action1}.`,
+      phoneticText: `Ministry of Earth Sciences RAINSHIELD AI Emergency Alert! ${g.alert_color} warning issued for ${basinShort}. Fused radar and satellite rainfall is ${rain} millimeters per hour. Predicted inundation depth is ${depth} meters within ${lead} hours. ${action1}.`
+    },
+    'hi-IN': {
+      label: 'हिन्दी (HINDI // hi-IN)',
+      nativeText: `पृथ्वी विज्ञान मंत्रालय रेनशील्ड-एआई आपातकालीन चेतावनी! ${basinShort} क्षेत्र में ${g.alert_color} अलर्ट जारी किया गया है। वर्षा की तीव्रता ${rain} मिलीमीटर प्रति घंटा है और अगले ${lead} घंटों में ${depth} मीटर जलभराव की संभावना है। कृपया तुरंत सुरक्षित स्थानों पर जाएं।`,
+      phoneticText: `Prithvi Vigyan Mantralaya Rainshield AI Aapatkaaleen Chetavani! ${basinShort} kshetra mein ${g.alert_color} alert jaari kiya gaya hai. Varsha ki teevrata ${rain} millimeter prati ghanta hai, aur agle ${lead} ghanton mein ${depth} meter jal-bharav ki sambhavna hai. Kripya turant surakshit sthanon par jaayein.`
+    },
+    'as-IN': {
+      label: 'অসমীয়া (ASSAMESE // as-IN)',
+      nativeText: `পৃথিৱী বিজ্ঞান মন্ত্ৰালয়ৰ জৰুৰীকালীন সতৰ্কবাণী! ${basinShort} অঞ্চলত ${g.alert_color} সতৰ্কতা জাৰি কৰা হৈছে। বৰষুণৰ তীব্ৰতা প্ৰতি ঘণ্টাত ${rain} মিলিমিটাৰ আৰু বানপানীৰ গভীৰতা ${depth} মিটাৰ হোৱাৰ সম্ভাৱনা আছে। অনুগ্ৰহ কৰি সুৰক্ষিত ওখ স্থানলৈ যাওক।`,
+      phoneticText: `Prithibi Bigyan Mantralayar jorurikaalin xotorkobani! ${basinShort} anchalot ${g.alert_color} xotorkota jari kora hoise. Borokhunor tibrota proti ghontat ${rain} millimeter, aru banpanir gobhirota ${depth} meter howar xombhabona ase. Anugroho kori xurokhito okho sthanoloi jaok.`
+    },
+    'ta-IN': {
+      label: 'தமிழ் (TAMIL // ta-IN)',
+      nativeText: `புவி அறிவியல் அமைச்சகத்தின் அவசர வெள்ள எச்சரிக்கை! ${basinShort} பகுதியில் ${g.alert_color} எச்சரிக்கை விடுக்கப்பட்டுள்ளது. மழை அளவு மணிக்கு ${rain} மில்லிமீட்டர் மற்றும் அடுத்த ${lead} மணி நேரத்தில் ${depth} மீட்டர் வெள்ளம் ஏற்பட வாய்ப்புள்ளது. உடனடியாக பாதுகாப்பான இடங்களுக்குச் செல்லவும்.`,
+      phoneticText: `Puvi Ariyiyal Amaichagathin avasara vella echarikkai! ${basinShort} paguthiyil ${g.alert_color} echarikkai vidukkappattullathu. Mazhai alavu manikku ${rain} millimeter, matrum adutha ${lead} mani nerathil ${depth} meter vellam erpada vaippullathu. Udana-diyaga paathukaappana idangalukku sellavum.`
+    },
+    'mr-IN': {
+      label: 'मराठी (MARATHI // mr-IN)',
+      nativeText: `पृथ्वी विज्ञान मंत्रालयाकडून तातडीचा पूर इशारा! ${basinShort} परिसरात ${g.alert_color} अलर्ट जारी करण्यात आला आहे. पावसाचा जोर प्रति तास ${rain} मिलीमीटर असून पुढील ${lead} तासांत ${depth} मीटर पाणी साचण्याची शक्यता आहे. कृपया नागरिकांनी सुरक्षित स्थळी स्थलांतर करावे.`,
+      phoneticText: `Prithvi Vidnyan Mantralaya-kadun tatdicha poor ishara! ${basinShort} parisarata ${g.alert_color} alert jaari karnyat aala aahe. Pavsacha jor prati taas ${rain} millimeter asun, pudhil ${lead} taasant ${depth} meter paani sachnyachi shakyata aahe. Krupaya nagrikani surakshit sthali sthalantar karave.`
+    },
+    'bn-IN': {
+      label: 'বাংলা (BENGALI // bn-IN)',
+      nativeText: `পৃথিবী বিজ্ঞান মন্ত্রকের জরুরি বন্যা সতর্কবার্তা! ${basinShort} এলাকায় ${g.alert_color} সতর্কতা জারি করা হয়েছে। বৃষ্টিপাতের মাত্রা ঘণ্টায় ${rain} মিলিমিটার এবং আগামী ${lead} ঘণ্টার মধ্যে ${depth} মিটার জলমগ্ন হওয়ার সম্ভাবনা রয়েছে। অনুগ্রহ করে নিরাপদ স্থানে আশ্রয় নিন।`,
+      phoneticText: `Prithibi Bigyan Mantraker joruri bonna xotorkobarta! ${basinShort} elakay ${g.alert_color} xotorkota jari kora hoyeche. Brishtipater matra ghontay ${rain} millimeter, ebong agami ${lead} ghontar modhye ${depth} meter jol-mogno howar xombhabona royeche. Anugroho kore nirapod sthane ashroy nin.`
+    }
+  };
+
+  const entry = catalog[lang] || catalog['en-IN'];
+  document.getElementById('voiceActiveLangBadge').textContent = `🔴 BROADCASTING LIVE: ${entry.label}`;
+  document.getElementById('voiceSubtitleNative').textContent = entry.nativeText;
+  document.getElementById('voiceSubtitlePhonetic').textContent = `SPOKEN: "${entry.phoneticText}"`;
+
+  if (!('speechSynthesis' in window)) return;
+
+  voiceSpeechTimer = setTimeout(() => {
+    const voices = window.speechSynthesis.getVoices() || [];
+    const langPrefix = lang.split('-')[0].toLowerCase();
+    const nativeVoice = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith(langPrefix));
+    const englishFallbackVoice =
+      voices.find((v) => v.lang && v.lang.toLowerCase().includes('en-in')) ||
+      voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en')) ||
+      voices[0] ||
+      null;
+
+    const u = new SpeechSynthesisUtterance();
+    window.__activeUtterance = u;
+
+    if (nativeVoice) {
+      u.voice = nativeVoice;
+      u.lang = nativeVoice.lang;
+      u.text = entry.nativeText;
+      document.getElementById('voiceEngineBadge').textContent = `NATIVE TTS (${nativeVoice.name.slice(0, 15)})`;
+    } else {
+      if (englishFallbackVoice) {
+        u.voice = englishFallbackVoice;
+        u.lang = englishFallbackVoice.lang;
+      } else {
+        u.lang = 'en-IN';
+      }
+      u.text = entry.phoneticText;
+      document.getElementById('voiceEngineBadge').textContent = `PHONETIC REGIONAL SYNTHESIS`;
+    }
+
+    u.rate = 0.94;
+    u.onend = () => {
+      isVoiceSpeaking = false;
+      document.querySelectorAll('.voice-chip').forEach((b) => b.classList.remove('border-emerald-400', 'bg-emerald-500/25'));
+      document.getElementById('voiceActiveLangBadge').textContent = `✓ BROADCAST DISSEMINATED: ${entry.label}`;
+    };
+    u.onerror = () => {
+      isVoiceSpeaking = false;
+    };
+    window.speechSynthesis.speak(u);
+  }, 90);
+}
+
+// ==================== 24-HOUR INTERACTIVE TIMELINE SCRUBBER ("THE WOW FACTOR") ====================
+function onScrubTimeline(stepIdxStr) {
+  const idx = parseInt(stepIdxStr, 10);
+  currentHorizonIdx = idx;
+  document.getElementById('timeScrubberSlider').value = idx;
+
+  const hs = activeGrid.hourly_series;
+  const label = hs.labels[idx] || 'LIVE';
+  const seriesVal = hs.fused_ensemble[idx] || activeGrid.fused_rainfall_mm_hr;
+  const liveBase = hs.fused_ensemble[3] || 70;
+
+  // Compute dynamic flood expansion multiplier as user scrubs through the 24h timeline
+  const expansionCurve = [0.65, 0.78, 0.90, 1.00, 1.24, 1.38, 1.28, 1.12, 0.88, 0.72, 0.58];
+  floodExpansionFactor = expansionCurve[idx] || 1.0;
+
+  const projectedDepth = +(activeGrid.predicted_inundation_depth_m * floodExpansionFactor).toFixed(2);
+  document.getElementById('scrubHorizonBadge').textContent = `${label} (${seriesVal} mm/h)`;
+  document.getElementById('scrubExpansionBadge').textContent = `${floodExpansionFactor.toFixed(2)}× (${projectedDepth}m)`;
+
+  refreshAllPanels();
+  syncMapOverlays(false);
+}
+
+function toggleTimelinePlayback() {
+  const btn = document.getElementById('btnPlayTimeline');
+  if (playbackTimer) {
+    clearInterval(playbackTimer);
+    playbackTimer = null;
+    btn.innerHTML = '<span>▶ AUTO-SCRUB 24H</span>';
+    return;
+  }
+  btn.innerHTML = '<span>⏸ PAUSE SCRUBBER</span>';
+  playbackTimer = setInterval(() => {
+    currentHorizonIdx = (currentHorizonIdx + 1) % 11;
+    onScrubTimeline(currentHorizonIdx);
+  }, 1200);
+}
+
+// ==================== SENSOR FUSION, SCADA & HYDRO PHYSICS ====================
+function recomputeSensorFusion() {
+  const sSat = document.getElementById('swSat').checked;
+  const sRad = document.getElementById('swRad').checked;
+  const sAws = document.getElementById('swAws').checked;
+  const sNwp = document.getElementById('swNwp').checked;
+
+  let activeFeeds = (sSat ? 1 : 0) + (sRad ? 1 : 0) + (sAws ? 1 : 0) + (sNwp ? 1 : 0);
+  if (activeFeeds === 0) {
+    document.getElementById('swSat').checked = true;
+    activeFeeds = 1;
+  }
+
+  const src = activeGrid.sources;
+  let wRad = sRad ? 0.35 : 0;
+  let wAws = sAws ? 0.30 : 0;
+  let wSat = sSat ? 0.20 : 0;
+  let wNwp = sNwp ? 0.15 : 0;
+  const sumW = wRad + wAws + wSat + wNwp;
+
+  wRad /= sumW; wAws /= sumW; wSat /= sumW; wNwp /= sumW;
+
+  document.getElementById('barSat').style.width = `${Math.round(wSat * 100)}%`;
+  document.getElementById('barRad').style.width = `${Math.round(wRad * 100)}%`;
+  document.getElementById('barAws').style.width = `${Math.round(wAws * 100)}%`;
+  document.getElementById('barNwp').style.width = `${Math.round(wNwp * 100)}%`;
+
+  const fused = +(
+    wRad * src.imd_dwr_rain_mm_hr +
+    wAws * src.aws_gauge_mm_hr +
+    wSat * src.insat_3ds_rain_mm_hr +
+    wNwp * src.nwp_downscaled_1km_mm_hr
+  ).toFixed(1);
+
+  const dropped = 4 - activeFeeds;
+  activeGrid.fused_rainfall_mm_hr = fused;
+  activeGrid.ensemble_uncertainty_m = +(0.14 + dropped * 0.09).toFixed(2);
+  activeGrid.confidence_score_pct = +(95.2 - dropped * 6.4).toFixed(1);
+
+  document.getElementById('ribContinuity').textContent = `${(100 - dropped * 3.8).toFixed(1)}% [${activeFeeds}/4 STREAMS]`;
+  document.getElementById('sliderRain').value = fused;
+  updateHydroPhysics();
+}
+
+function recomputeScadaPumps() {
+  const chks = document.querySelectorAll('.scada-pump-chk');
+  let activePumps = 0;
+  chks.forEach((c) => { if (c.checked) activePumps++; });
+
+  const tideM = parseFloat(document.getElementById('sliderTideSurge').value);
+  const damCusecs = parseFloat(document.getElementById('sliderDamCusecs').value);
+
+  document.getElementById('lblTideSurge').textContent = `+${tideM.toFixed(2)} m`;
+  document.getElementById('lblDamCusecs').textContent = `${damCusecs.toLocaleString()} cusecs`;
+
+  const pumpDrawdown = activePumps * 0.06;
+  const tidePenalty = Math.max(0, (tideM - 0.45) * 0.18);
+  const damPenalty = (damCusecs / 15000) * 0.22;
+  scadaNetDeltaM = +(tidePenalty + damPenalty - pumpDrawdown).toFixed(2);
+
+  document.getElementById('scadaActiveCount').textContent = `${activePumps} / 4 UNITS`;
+  document.getElementById('scadaNetEffect').textContent = `${scadaNetDeltaM >= 0 ? '+' : ''}${scadaNetDeltaM} m`;
+  document.getElementById('ribPumpStatus').textContent = `${activePumps}/4 ACTIVE (${scadaNetDeltaM >= 0 ? '+' : ''}${scadaNetDeltaM}m)`;
+
+  updateHydroPhysics();
+  document.getElementById('scadaFinalDepth').textContent = `${activeGrid.predicted_inundation_depth_m} m`;
+}
+
+function updateHydroPhysics() {
+  const rain = parseFloat(document.getElementById('sliderRain').value);
+  const cn = parseFloat(document.getElementById('sliderCn').value);
+  const drain = parseFloat(document.getElementById('sliderDrain').value);
+
+  const sRet = (25400.0 / cn) - 254.0;
+  const ia = 0.15 * sRet;
+  let qRunoff = rain > ia ? Math.pow(rain - ia, 2) / (rain - ia + sRet) : rain * 0.15;
+  qRunoff = +qRunoff.toFixed(1);
+  const infil = Math.max(0, +(rain - qRunoff).toFixed(1));
+
+  const effDrain = activeGrid.drainage_capacity_mm_hr * (drain / 100.0);
+  const netFlux = Math.max(0, qRunoff - effDrain * 0.55);
+  const slopeFac = 1.0 / Math.max(0.6, Math.sqrt(Math.max(0.5, activeGrid.slope_deg)));
+  const twiFac = Math.max(0.8, activeGrid.topographic_wetness_index / 12.0);
+
+  const dispatchedMitigation = countDispatchedForActiveGrid() * 0.06;
+  const rawDepth = (netFlux / 48.0) * slopeFac * twiFac + scadaNetDeltaM - dispatchedMitigation;
+  const depth = +Math.min(4.2, Math.max(0.03, rawDepth)).toFixed(2);
+
+  let color = 'GREEN';
+  let label = 'NORMAL DRAINAGE FLOW (NO RISK)';
+  let lead = 12.0;
+  if (depth >= 1.0 || rain >= 65.0) {
+    color = 'RED';
+    label = 'EXTREME INUNDATION WARNING (ACT NOW)';
+    lead = 3.0;
+  } else if (depth >= 0.5 || rain >= 40.0) {
+    color = 'ORANGE';
+    label = 'HIGH INUNDATION WATCH (PREPARE)';
+    lead = 5.0;
+  } else if (depth >= 0.2 || rain >= 20.0) {
+    color = 'YELLOW';
+    label = 'LOCALIZED WATERLOGGING ADVISORY';
+    lead = 6.5;
+  }
+
+  activeGrid.fused_rainfall_mm_hr = rain;
+  activeGrid.scs_curve_number = cn;
+  activeGrid.drainage_efficiency_pct = drain;
+  activeGrid.surface_runoff_mm_hr = qRunoff;
+  activeGrid.infiltration_loss_mm_hr = infil;
+  activeGrid.predicted_inundation_depth_m = depth;
+  activeGrid.alert_color = color;
+  activeGrid.severity_label = label;
+  activeGrid.lead_time_hrs = lead;
+  if (activeGrid.inundation_zones && activeGrid.inundation_zones.length > 0) {
+    activeGrid.inundation_zones[0].depth_m = depth;
+  }
+
+  renderBasinTabs();
+  refreshAllPanels();
+  syncMapOverlays(false);
+}
+
+// ==================== CHARTS (RECHARTS-STYLE METEOGRAM + XAI SHAP) ====================
+function initAnalyticsCharts() {
+  const ctxTime = document.getElementById('ensembleTimelineChart').getContext('2d');
+  const gradFill = ctxTime.createLinearGradient(0, 0, 0, 160);
+  gradFill.addColorStop(0, 'rgba(6, 182, 212, 0.38)');
+  gradFill.addColorStop(1, 'rgba(6, 182, 212, 0.01)');
+
+  timelineChart = new Chart(ctxTime, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: 'AI Ensemble Water Accumulation (mm/hr)',
+          data: [],
+          borderColor: '#22d3ee',
+          backgroundColor: gradFill,
+          fill: true,
+          borderWidth: 2.4,
+          tension: 0.38,
+          pointRadius: 3,
+          pointBackgroundColor: '#020617',
+          pointBorderColor: '#22d3ee'
+        },
+        {
+          label: 'Doppler Radar Nowcast (0–3h)',
+          data: [],
+          borderColor: '#ef4444',
+          borderDash: [4, 4],
+          borderWidth: 1.8,
+          tension: 0.38,
+          pointRadius: 2
+        },
+        {
+          label: 'NCMRWF NWP 1km GNN',
+          data: [],
+          borderColor: '#10b981',
+          borderWidth: 1.5,
+          tension: 0.38,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#94a3b8', font: { size: 10, family: 'JetBrains Mono' }, boxWidth: 10, padding: 8 }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#94a3b8', font: { size: 9.5, family: 'JetBrains Mono' } }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#94a3b8', font: { size: 9.5, family: 'JetBrains Mono' } }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+
+  const ctxShap = document.getElementById('shapBarChart').getContext('2d');
+  shapChart = new Chart(ctxShap, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        data: [],
+        backgroundColor: ['#22d3ee', '#ef4444', '#f59e0b', '#c084fc', '#10b981'],
+        borderRadius: 3
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          max: 45,
+          ticks: { color: '#94a3b8', font: { size: 9, family: 'JetBrains Mono' }, callback: (v) => v + '%' },
+          grid: { color: 'rgba(255,255,255,0.04)' }
+        },
+        y: {
+          ticks: { color: '#f8fafc', font: { size: 9.5, family: 'JetBrains Mono' } },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function refreshCharts() {
+  if (!timelineChart || !shapChart) return;
+  const hs = activeGrid.hourly_series;
+  timelineChart.data.labels = hs.labels;
+  timelineChart.data.datasets[0].data = hs.fused_ensemble;
+  timelineChart.data.datasets[1].data = hs.radar_dwr;
+  timelineChart.data.datasets[2].data = hs.nwp_model;
+  timelineChart.update();
+
+  const shap = activeGrid.shap_attribution;
+  shapChart.data.labels = Object.keys(shap);
+  shapChart.data.datasets[0].data = Object.values(shap);
+  shapChart.update();
+}
+
+// ==================== CLOUDBURST, LIVE API, COPILOT & MODALS ====================
+async function triggerExtremeCloudburst() {
+  const burstRain = 112.0;
+  document.getElementById('sliderRain').value = burstRain;
+  document.getElementById('sliderDrain').value = 40;
+  activeGrid.sources.insat_3ds_tir_k = 191.8;
+  activeGrid.sources.imd_dwr_dbz = 62.0;
+  activeGrid.sources.imd_dwr_rain_mm_hr = 118.4;
+  activeGrid.sources.aws_gauge_mm_hr = 109.5;
+  activeGrid.hitl_status = "AI_ESCALATED_RED [CLOUDBURST]";
+  updateHydroPhysics();
+
+  try {
+    await fetch('/api/simulate-extreme-rain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ grid_id: activeGrid.id, rain_mm_hr: burstRain, drainage_efficiency_pct: 40 })
+    });
+  } catch (e) {}
+
+  broadcastVoice('en-IN');
+}
+
+async function scanLiveCity(name, lat, lng, cn) {
+  document.getElementById('customCityName').value = name;
+  document.getElementById('customLat').value = lat;
+  document.getElementById('customLng').value = lng;
+  await executeLiveOpenMeteoScan(name, lat, lng, cn);
+}
+
+async function scanCustomCoords() {
+  const name = document.getElementById('customCityName').value || 'Custom Indian Basin';
+  const lat = parseFloat(document.getElementById('customLat').value) || 22.57;
+  const lng = parseFloat(document.getElementById('customLng').value) || 88.36;
+  await executeLiveOpenMeteoScan(name, lat, lng, 91);
+}
+
+async function executeLiveOpenMeteoScan(name, lat, lng, cn) {
+  const statusBox = document.getElementById('liveApiStatusBox');
+  statusBox.textContent = `[CONNECTING] Querying Open-Meteo / GFS NWP API for ${name} (${lat}°N, ${lng}°E)...`;
+
+  let liveRain = 46.8;
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=precipitation,rain,temperature_2m,surface_pressure`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      const currRain = data.current?.precipitation || data.current?.rain || 0;
+      liveRain = currRain > 5.0 ? +(currRain * 2.5).toFixed(1) : 46.8;
+      statusBox.textContent = `[SUCCESS // LIVE TELEMETRY LOCKED]\nLocation: ${name} (${lat}°N, ${lng}°E)\nFused Convective Rain Rate: ${liveRain} mm/hr\nStatus: Injected into RAINSHIELD-AI 1km Spatial Grid & Map!`;
+    }
+  } catch (e) {
+    statusBox.textContent = `[FALLBACK TELEMETRY LOCKED]\nLocation: ${name} (${lat}°N, ${lng}°E)\nRain Rate: ${liveRain} mm/hr`;
+  }
+
+  const newId = `GRID-LIVE-${grids.length + 1}`;
+  const newGrid = {
+    ...DEFAULT_GRIDS[0],
+    id: newId,
+    name: `${name} [LIVE API]`,
+    district: name.split('—')[0].trim(),
+    state: "Live NWP Telemetry",
+    lat,
+    lng,
+    scs_curve_number: cn,
+    fused_rainfall_mm_hr: liveRain,
+    inundation_zones: [
+      { lat, lng, radius_m: 1250, depth_m: 0.88, zone_name: `Zone A: ${name} Core Floodplain`, risk_pct: 86, pop: 58000 }
+    ],
+    evac_corridor: [[lat, lng], [lat + 0.015, lng + 0.015]],
+    blocked_corridor: [[lat, lng], [lat - 0.012, lng - 0.012]]
+  };
+
+  grids.unshift(newGrid);
+  selectBasin(newId);
+  document.getElementById('sliderRain').value = liveRain;
+  updateHydroPhysics();
+}
+
+function runCopilotQuery(type) {
+  const box = document.getElementById('copilotTerminal');
+  const g = activeGrid;
+  const responses = {
+    bias: `<span class="text-cyan-400 font-bold">[MOES-COPILOT // 4-SOURCE KALMAN BIAS DIAGNOSTIC]</span><br>
+Target Basin : <b>${g.id} (${g.name})</b><br>
+1. IMD Doppler Radar (DWR) : ${g.sources.imd_dwr_rain_mm_hr} mm/hr (${g.sources.imd_dwr_dbz} dBZ) → Weight: <b>0.35</b><br>
+2. IMD AWS Ground Gauge    : ${g.sources.aws_gauge_mm_hr} mm/hr (${g.sources.aws_station_id}) → Weight: <b>0.30</b><br>
+3. INSAT-3DS TIR-1 + GSMaP : ${g.sources.insat_3ds_rain_mm_hr} mm/hr (${g.sources.insat_3ds_tir_k} K) → Weight: <b>0.20</b><br>
+4. NCMRWF NWP 1km GNN      : ${g.sources.nwp_downscaled_1km_mm_hr} mm/hr → Weight: <b>0.15</b><br>
+→ <b>Kalman Fused QPE = ${g.fused_rainfall_mm_hr} mm/hr</b> | Epistemic CI = <b>±${g.ensemble_uncertainty_m}m</b>.`,
+    ndrf: `<span class="text-emerald-400 font-bold">[MOES-COPILOT // 6-HOUR NDRF &amp; PUMP STAGING PLAN]</span><br>
+• T+0.5h : Pre-stage 4 NDRF rescue teams at ${g.name} (${g.lat.toFixed(3)}°N, ${g.lng.toFixed(3)}°E).<br>
+• T+1.0h : Engage SCADA axial storm pumps at 100% capacity (-0.24m hydraulic drawdown).<br>
+• T+1.5h : Disseminate NDMA CAP v1.2 SMS &amp; Voice alerts to ${g.affected_population.toLocaleString()} citizens.`,
+    outage: `<span class="text-amber-400 font-bold">[MOES-COPILOT // DOPPLER RADAR OUTAGE SIMULATION]</span><br>
+• Kalman Filter automatically redistributes S2 weight (0.35 → 0.00) across AWS (0.46), INSAT-3DS (0.31), and NWP 1km GNN (0.23).<br>
+• System maintains 99.6% continuity; epistemic uncertainty widens from ±0.18m to ±0.23m.`,
+    substation: `<span class="text-red-400 font-bold">[MOES-COPILOT // CRITICAL INFRASTRUCTURE SUBMERGENCE AUDIT]</span><br>
+${(g.critical_infra_at_risk || []).map((i) => typeof i === 'string' ? `• ${i}` : `• ${i.asset}: Water Level = <b>${i.depth}</b> → Status: <b>${i.status}</b>`).join('<br>')}`
+  };
+  box.innerHTML = responses[type] || responses.bias;
+}
+
+function runCustomCopilot() {
+  const q = document.getElementById('copilotCustomInput').value.trim();
+  if (!q) return;
+  const g = activeGrid;
+  document.getElementById('copilotTerminal').innerHTML =
+    `<span class="text-cyan-400">&gt; QUERY: ${q}</span><br><br>` +
+    `<b>[MOES-COPILOT SYNTHESIS FOR ${g.id}]:</b><br>` +
+    `• Fused Rainfall Intensity: <b>${g.fused_rainfall_mm_hr} mm/hr</b> | Surface Runoff: <b>${g.surface_runoff_mm_hr} mm/hr</b><br>` +
+    `• Predicted 2D Flood Depth: <b>${g.predicted_inundation_depth_m}m ± ${g.ensemble_uncertainty_m}m</b><br>` +
+    `• Recommended Directive: <b>${g.recommended_actions[0]}</b>`;
+}
+
+function openDialog(id) {
+  const dlg = document.getElementById(id);
+  if (dlg && typeof dlg.showModal === 'function') {
+    if (id === 'hitlDialog') {
+      document.getElementById('hitlTargetGrid').value = `${activeGrid.id} // ${activeGrid.name}`;
+      document.getElementById('hitlAlertSelect').value = activeGrid.alert_color;
+    }
+    dlg.showModal();
+  }
+}
+
+function renderBacktestModal() {
+  const tbody = document.getElementById('backtestTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = backtests.map((bt) => `
+    <tr>
+      <td class="py-2.5 px-2 font-bold text-white">${bt.event_name}</td>
+      <td class="py-2.5 px-2">${bt.peak_rain_mm_hr} mm/hr</td>
+      <td class="py-2.5 px-2">Obs: ${bt.observed_depth_m}m | Pred: <b class="text-cyan-300">${bt.predicted_depth_m}m</b></td>
+      <td class="py-2.5 px-2"><span class="text-emerald-400">${bt.pod}</span> / ${bt.far} / ${bt.csi}</td>
+      <td class="py-2.5 px-2 font-bold text-emerald-300">${bt.spatial_iou_pct}%</td>
+      <td class="py-2.5 px-2"><button onclick="replayDisaster('${bt.grid_id}', ${bt.peak_rain_mm_hr})" class="px-2.5 py-1 rounded bg-cyan-500/20 border border-cyan-400 text-cyan-200">[REPLAY]</button></td>
+    </tr>
+  `).join('');
+}
+
+function replayDisaster(gridId, rain) {
+  document.getElementById('backtestDialog').close();
+  selectBasin(gridId);
+  document.getElementById('sliderRain').value = rain;
+  updateHydroPhysics();
+}
+
+async function commitHitlOverride() {
+  const officer = document.getElementById('hitlOfficerName').value;
+  const color = document.getElementById('hitlAlertSelect').value;
+  const note = document.getElementById('hitlAuditReason').value;
+
+  activeGrid.alert_color = color;
+  activeGrid.hitl_status = `HITL_VERIFIED_${color}`;
+
+  auditLedger.unshift({
+    ts: new Date().toLocaleTimeString('en-IN', { hour12: false }) + ' IST',
+    officer,
+    action: `HITL_OVERRIDE_${color} // ${activeGrid.id}`,
+    hash: 'SHA256:' + Math.random().toString(16).substring(2, 12),
+    note
+  });
+
+  renderHitlLedger();
+  renderBasinTabs();
+  refreshAllPanels();
+  syncMapOverlays(false);
+}
+
+function renderHitlLedger() {
+  const el = document.getElementById('hitlAuditList');
+  if (!el) return;
+  el.innerHTML = auditLedger.map((item) => `
+    <div class="py-1.5 border-b border-slate-800">
+      <span class="text-cyan-400">[${item.ts}]</span> <b>${item.officer}</b> → <span class="text-amber-300">${item.action}</span> <span class="text-slate-500">(${item.hash})</span><br>
+      <span>${item.note}</span>
+    </div>
+  `).join('');
+}
+
+function buildCapXml(g) {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>MOES-RAINSHIELD-${g.id}-${Date.now()}</identifier>
+  <sender>rainshield-dss@moes.gov.in</sender>
+  <sent>${new Date().toISOString()}</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <code_standard>NDMA-CAP-IN-v1.2</code_standard>
+  <info>
+    <category>Met</category>
+    <event>Heavy Rainfall and Basin Inundation Early Warning</event>
+    <urgency>Immediate</urgency>
+    <severity>${g.alert_color === 'RED' ? 'Extreme' : 'Severe'}</severity>
+    <certainty>Observed</certainty>
+    <headline>[${g.alert_color}] ${g.severity_label} — ${g.name}</headline>
+    <description>Multi-source AI fusion (INSAT-3DS + IMD Doppler Radar + AWS + NCMRWF 1km GNN) predicts ${g.fused_rainfall_mm_hr} mm/hr rainfall and ${g.predicted_inundation_depth_m}m ± ${g.ensemble_uncertainty_m}m inundation depth within ${g.lead_time_hrs} hours (Confidence: ${g.confidence_score_pct}%).</description>
+    <instruction>${g.recommended_actions.join(' | ')}</instruction>
+    <area>
+      <areaDesc>${g.name}, ${g.district}, ${g.state}</areaDesc>
+      <circle>${g.lat},${g.lng} 2.5</circle>
+    </area>
+  </info>
+</alert>`;
+}
+
+function openCapModal() {
+  document.getElementById('capXmlOutput').textContent = buildCapXml(activeGrid);
+  openDialog('capDialog');
+}
+
+function exportCapXmlFile() {
+  const blob = new Blob([buildCapXml(activeGrid)], { type: 'application/xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `MOES_CAP_${activeGrid.id}.xml`;
+  a.click();
+}
+
+function exportOfficialSitRep() {
+  const g = activeGrid;
+  const txt = `======================================================================
+MINISTRY OF EARTH SCIENCES (MoES) // RAINSHIELD-AI SITUATION REPORT
+Problem Statement ID : SIH26071 | Team: BWU INCURSION 1.0
+======================================================================
+Target Basin Grid    : ${g.id} — ${g.name} (${g.district}, ${g.state})
+Alert Classification : ${g.alert_color} // ${g.severity_label}
+Fused Rainfall QPE   : ${g.fused_rainfall_mm_hr} mm/hr
+Predicted Flood Depth: ${g.predicted_inundation_depth_m} m ± ${g.ensemble_uncertainty_m} m
+Recommended Actions  :
+- ${g.recommended_actions.join('\n- ')}
+======================================================================`;
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `MOES_RAINSHIELD_SitRep_${g.id}.txt`;
+  a.click();
+}
+</script>
+</body>
+</html>

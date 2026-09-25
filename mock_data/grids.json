@@ -1,0 +1,1195 @@
+[
+  {
+    "id": "GRID-MUM-01",
+    "name": "Mumbai \u2014 Mithi Basin & Kurla Lowland",
+    "district": "Mumbai Suburban",
+    "state": "Maharashtra",
+    "lat": 19.0728,
+    "lng": 72.8826,
+    "grid_resolution": "1.0 km \u00d7 1.0 km",
+    "elevation_m": 6.4,
+    "slope_deg": 1.2,
+    "lulc_class": "High-Density Urban Impervious (88%)",
+    "impervious_pct": 88,
+    "scs_curve_number": 94,
+    "drainage_capacity_mm_hr": 50.0,
+    "drainage_efficiency_pct": 42.0,
+    "topographic_wetness_index": 14.8,
+    "sources": {
+      "insat_3ds_tir_k": 194.0,
+      "insat_3ds_rain_mm_hr": 99.8,
+      "gsmap_isro_mm_hr": 96.6,
+      "imd_dwr_dbz": 64.0,
+      "imd_dwr_rain_mm_hr": 112.8,
+      "aws_gauge_mm_hr": 106.3,
+      "aws_station_id": "AWS-SANTACRUZ-04",
+      "nwp_ncmrwf_mm_hr": 68.5,
+      "nwp_downscaled_1km_mm_hr": 104.2
+    },
+    "fused_rainfall_mm_hr": 107.0,
+    "accumulated_rain_3h_mm": 262.2,
+    "accumulated_rain_24h_mm": 312.0,
+    "infiltration_loss_mm_hr": 16.5,
+    "surface_runoff_mm_hr": 90.5,
+    "predicted_inundation_depth_m": 1.85,
+    "ensemble_uncertainty_m": 0.18,
+    "confidence_score_pct": 94.2,
+    "alert_color": "RED",
+    "severity_label": "EXTREME INUNDATION WARNING (ACT NOW)",
+    "lead_time_hrs": 3.0,
+    "hitl_status": "AI_ESCALATED_RED",
+    "hitl_officer_note": "Awaiting BMC / DDMA Duty Officer confirmation for NDRF boat staging at Kurla Bail Bazaar.",
+    "affected_population": 145000,
+    "critical_infra_at_risk": [
+      {
+        "asset": "CSMT\u2013Kurla Central Rail Corridor",
+        "depth": "1.35m",
+        "status": "SUSPENDED"
+      },
+      {
+        "asset": "LBS Marg & Milan Subway Underpass",
+        "depth": "1.42m",
+        "status": "SUBMERGED"
+      },
+      {
+        "asset": "Eastern Express Highway Corridor",
+        "depth": "0.12m",
+        "status": "OPEN (EVAC ROUTE)"
+      }
+    ],
+    "recommended_actions": [
+      "Activate pumping stations at Haji Ali, Love Grove & Britannia Outfalls at 100% capacity",
+      "Close Milan & Andheri subways; divert vehicular traffic to Eastern Express Highway",
+      "Pre-position 4 NDRF flood rescue teams at Kurla Bail Bazaar low-lying clusters"
+    ],
+    "shap_attribution": {
+      "3h Radar+AWS Accumulation": 38,
+      "Tide Lock & Drain Bottleneck": 27,
+      "SCS-CN Imperviousness (94)": 19,
+      "INSAT-3DS Cooling (204K)": 10,
+      "DEM Depression (TWI 14.8)": 6
+    },
+    "hourly_series": {
+      "labels": [
+        "-3h",
+        "-2h",
+        "-1h",
+        "LIVE",
+        "+1h",
+        "+2h",
+        "+3h",
+        "+6h",
+        "+12h",
+        "+18h",
+        "+24h"
+      ],
+      "satellite_gsmap": [
+        28,
+        42,
+        58,
+        74,
+        81,
+        76,
+        60,
+        42,
+        25,
+        18,
+        12
+      ],
+      "radar_dwr": [
+        32,
+        49,
+        68,
+        82,
+        89,
+        80,
+        62,
+        null,
+        null,
+        null,
+        null
+      ],
+      "nwp_model": [
+        25,
+        38,
+        52,
+        68,
+        75,
+        72,
+        58,
+        46,
+        30,
+        22,
+        15
+      ],
+      "fused_ensemble": [
+        31,
+        47,
+        65,
+        79,
+        86,
+        78,
+        61,
+        44,
+        28,
+        19,
+        13
+      ],
+      "uncertainty_upper": [
+        35,
+        52,
+        72,
+        86,
+        95,
+        87,
+        70,
+        53,
+        36,
+        26,
+        19
+      ],
+      "uncertainty_lower": [
+        27,
+        42,
+        58,
+        72,
+        77,
+        69,
+        52,
+        35,
+        20,
+        12,
+        7
+      ]
+    },
+    "inundation_zones": [
+      {
+        "lat": 19.0728,
+        "lng": 72.8826,
+        "radius_m": 1350,
+        "depth_m": 1.42,
+        "zone_name": "Kurla-Mithi Floodplain"
+      },
+      {
+        "lat": 19.0845,
+        "lng": 72.8412,
+        "radius_m": 950,
+        "depth_m": 0.95,
+        "zone_name": "Milan Subway Basin"
+      },
+      {
+        "lat": 19.0176,
+        "lng": 72.8428,
+        "radius_m": 1100,
+        "depth_m": 1.15,
+        "zone_name": "Hindmata-Dadar Bowl"
+      }
+    ],
+    "evac_corridor": [
+      [
+        19.0728,
+        72.8826
+      ],
+      [
+        19.068,
+        72.869
+      ],
+      [
+        19.0595,
+        72.855
+      ]
+    ],
+    "blocked_corridor": [
+      [
+        19.0728,
+        72.8826
+      ],
+      [
+        19.0845,
+        72.8412
+      ]
+    ]
+  },
+  {
+    "id": "GRID-GUW-02",
+    "name": "Guwahati \u2014 Bharalu-Bahini Urban Catchment",
+    "district": "Kamrup Metropolitan",
+    "state": "Assam (NER)",
+    "lat": 26.1445,
+    "lng": 91.7362,
+    "grid_resolution": "1.0 km \u00d7 1.0 km",
+    "elevation_m": 51.2,
+    "slope_deg": 4.8,
+    "lulc_class": "Piedmont Urban + Encroached Wetland",
+    "impervious_pct": 76,
+    "scs_curve_number": 91,
+    "drainage_capacity_mm_hr": 38.0,
+    "drainage_efficiency_pct": 54.0,
+    "topographic_wetness_index": 13.9,
+    "sources": {
+      "insat_3ds_tir_k": 198.2,
+      "insat_3ds_rain_mm_hr": 66.0,
+      "gsmap_isro_mm_hr": 62.4,
+      "imd_dwr_dbz": 53.0,
+      "imd_dwr_rain_mm_hr": 71.5,
+      "aws_gauge_mm_hr": 68.2,
+      "aws_station_id": "AWS-DISPUR-01",
+      "nwp_ncmrwf_mm_hr": 59.0,
+      "nwp_downscaled_1km_mm_hr": 69.1
+    },
+    "fused_rainfall_mm_hr": 69.8,
+    "accumulated_rain_3h_mm": 154.0,
+    "accumulated_rain_24h_mm": 248.5,
+    "infiltration_loss_mm_hr": 9.4,
+    "surface_runoff_mm_hr": 60.4,
+    "predicted_inundation_depth_m": 1.18,
+    "ensemble_uncertainty_m": 0.15,
+    "confidence_score_pct": 92.8,
+    "alert_color": "RED",
+    "severity_label": "SEVERE FLASH INUNDATION WARNING",
+    "lead_time_hrs": 4.0,
+    "hitl_status": "OFFICIAL_VERIFIED_RED",
+    "hitl_officer_note": "ASDMA verified Meghalaya hill runoff entering Bahini river; sluice gates at Bharalumukh closed.",
+    "affected_population": 92000,
+    "critical_infra_at_risk": [
+      {
+        "asset": "GS Road Anil Nagar\u2013Nabin Nagar",
+        "depth": "1.18m",
+        "status": "SUBMERGED"
+      },
+      {
+        "asset": "Rukminigaon 33kV Substation",
+        "depth": "0.92m",
+        "status": "ISOLATED"
+      },
+      {
+        "asset": "NH-27 Khanapara Elevated Flyover",
+        "depth": "0.05m",
+        "status": "OPEN (NDRF ROUTE)"
+      }
+    ],
+    "recommended_actions": [
+      "Close Bharalumukh sluice gate against Brahmaputra backflow; run high-volume axial pumps",
+      "Issue Assamese & English CAP voice alerts to Anil Nagar, Nabin Nagar, and Hatigaon",
+      "Enforce power isolation in submerged distribution transformers (>0.8m depth)"
+    ],
+    "shap_attribution": {
+      "Meghalaya Orographic Runoff": 34,
+      "3h Radar+AWS Accumulation": 29,
+      "Bharalu Sluice Backwater": 21,
+      "Wetland Storage Loss": 11,
+      "NWP Convective Trend": 5
+    },
+    "hourly_series": {
+      "labels": [
+        "-3h",
+        "-2h",
+        "-1h",
+        "LIVE",
+        "+1h",
+        "+2h",
+        "+3h",
+        "+6h",
+        "+12h",
+        "+18h",
+        "+24h"
+      ],
+      "satellite_gsmap": [
+        22,
+        35,
+        50,
+        66,
+        72,
+        65,
+        48,
+        34,
+        20,
+        14,
+        9
+      ],
+      "radar_dwr": [
+        26,
+        41,
+        59,
+        72,
+        78,
+        68,
+        52,
+        null,
+        null,
+        null,
+        null
+      ],
+      "nwp_model": [
+        20,
+        32,
+        46,
+        59,
+        64,
+        60,
+        45,
+        35,
+        22,
+        16,
+        11
+      ],
+      "fused_ensemble": [
+        25,
+        39,
+        56,
+        70,
+        76,
+        67,
+        50,
+        35,
+        21,
+        15,
+        10
+      ],
+      "uncertainty_upper": [
+        29,
+        44,
+        62,
+        77,
+        84,
+        75,
+        58,
+        42,
+        27,
+        20,
+        15
+      ],
+      "uncertainty_lower": [
+        21,
+        34,
+        50,
+        63,
+        68,
+        59,
+        42,
+        28,
+        15,
+        10,
+        5
+      ]
+    },
+    "inundation_zones": [
+      {
+        "lat": 26.1445,
+        "lng": 91.7362,
+        "radius_m": 1200,
+        "depth_m": 1.18,
+        "zone_name": "Anil Nagar & Nabin Nagar Bowl"
+      },
+      {
+        "lat": 26.1318,
+        "lng": 91.7952,
+        "radius_m": 1050,
+        "depth_m": 0.92,
+        "zone_name": "Rukminigaon & Beltola Basin"
+      }
+    ],
+    "evac_corridor": [
+      [
+        26.1445,
+        91.7362
+      ],
+      [
+        26.158,
+        91.752
+      ],
+      [
+        26.169,
+        91.765
+      ]
+    ],
+    "blocked_corridor": [
+      [
+        26.1445,
+        91.7362
+      ],
+      [
+        26.1318,
+        91.7952
+      ]
+    ]
+  },
+  {
+    "id": "GRID-MAA-03",
+    "name": "Chennai \u2014 Adyar-Velachery Marsh Basin",
+    "district": "Chennai",
+    "state": "Tamil Nadu",
+    "lat": 12.9756,
+    "lng": 80.2207,
+    "grid_resolution": "1.0 km \u00d7 1.0 km",
+    "elevation_m": 4.8,
+    "slope_deg": 0.8,
+    "lulc_class": "Coastal Urban Built-Up (82%)",
+    "impervious_pct": 82,
+    "scs_curve_number": 92,
+    "drainage_capacity_mm_hr": 45.0,
+    "drainage_efficiency_pct": 68.0,
+    "topographic_wetness_index": 15.2,
+    "sources": {
+      "insat_3ds_tir_k": 212.0,
+      "insat_3ds_rain_mm_hr": 48.5,
+      "gsmap_isro_mm_hr": 45.2,
+      "imd_dwr_dbz": 47.5,
+      "imd_dwr_rain_mm_hr": 54.0,
+      "aws_gauge_mm_hr": 52.4,
+      "aws_station_id": "AWS-MEENAMBAKKAM-02",
+      "nwp_ncmrwf_mm_hr": 49.0,
+      "nwp_downscaled_1km_mm_hr": 53.2
+    },
+    "fused_rainfall_mm_hr": 52.8,
+    "accumulated_rain_3h_mm": 124.0,
+    "accumulated_rain_24h_mm": 210.0,
+    "infiltration_loss_mm_hr": 7.9,
+    "surface_runoff_mm_hr": 44.9,
+    "predicted_inundation_depth_m": 0.78,
+    "ensemble_uncertainty_m": 0.12,
+    "confidence_score_pct": 91.5,
+    "alert_color": "ORANGE",
+    "severity_label": "HIGH INUNDATION WATCH (PREPARE)",
+    "lead_time_hrs": 5.5,
+    "hitl_status": "AI_RECOMMENDED_ORANGE",
+    "hitl_officer_note": "Monitoring Chembarambakkam reservoir inflow; pre-release advisory ready.",
+    "affected_population": 118000,
+    "critical_infra_at_risk": [
+      {
+        "asset": "Velachery\u2013Taramani Link Road",
+        "depth": "0.78m",
+        "status": "WATERLOGGED"
+      },
+      {
+        "asset": "Pallikaranai Radial Corridor",
+        "depth": "0.62m",
+        "status": "RESTRICTED"
+      },
+      {
+        "asset": "Guindy Kathipara Elevated Corridor",
+        "depth": "0.00m",
+        "status": "OPEN (SAFE ROUTE)"
+      }
+    ],
+    "recommended_actions": [
+      "Regulate Chembarambakkam surplus outflow to <3,000 cusecs during high tide window",
+      "Deploy mobile de-watering pumps along Velachery-Taramani Link Road",
+      "Broadcast Tamil & English CAP advisories to ground-floor residents in Zone 13 & 14"
+    ],
+    "shap_attribution": {
+      "3h Radar+AWS Accumulation": 33,
+      "Marsh Bowl Topography": 28,
+      "SCS-CN Imperviousness": 20,
+      "Estuary Tidal Backwater": 12,
+      "NWP Cyclonic Feeder Band": 7
+    },
+    "hourly_series": {
+      "labels": [
+        "-3h",
+        "-2h",
+        "-1h",
+        "LIVE",
+        "+1h",
+        "+2h",
+        "+3h",
+        "+6h",
+        "+12h",
+        "+18h",
+        "+24h"
+      ],
+      "satellite_gsmap": [
+        18,
+        28,
+        39,
+        48,
+        55,
+        58,
+        50,
+        38,
+        26,
+        18,
+        12
+      ],
+      "radar_dwr": [
+        20,
+        32,
+        44,
+        54,
+        60,
+        62,
+        53,
+        null,
+        null,
+        null,
+        null
+      ],
+      "nwp_model": [
+        16,
+        26,
+        36,
+        49,
+        54,
+        56,
+        49,
+        39,
+        28,
+        20,
+        14
+      ],
+      "fused_ensemble": [
+        19,
+        30,
+        42,
+        53,
+        59,
+        61,
+        52,
+        39,
+        27,
+        19,
+        13
+      ],
+      "uncertainty_upper": [
+        23,
+        35,
+        48,
+        59,
+        66,
+        68,
+        59,
+        46,
+        33,
+        24,
+        18
+      ],
+      "uncertainty_lower": [
+        15,
+        25,
+        36,
+        47,
+        52,
+        54,
+        45,
+        32,
+        21,
+        14,
+        8
+      ]
+    },
+    "inundation_zones": [
+      {
+        "lat": 12.9756,
+        "lng": 80.2207,
+        "radius_m": 1300,
+        "depth_m": 0.78,
+        "zone_name": "Velachery-Pallikaranai Margin"
+      },
+      {
+        "lat": 13.0102,
+        "lng": 80.2568,
+        "radius_m": 950,
+        "depth_m": 0.62,
+        "zone_name": "Adyar Estuary Floodplain"
+      }
+    ],
+    "evac_corridor": [
+      [
+        12.9756,
+        80.2207
+      ],
+      [
+        12.995,
+        80.212
+      ],
+      [
+        13.0067,
+        80.205
+      ]
+    ],
+    "blocked_corridor": [
+      [
+        12.9756,
+        80.2207
+      ],
+      [
+        13.0102,
+        80.2568
+      ]
+    ]
+  },
+  {
+    "id": "GRID-WAY-04",
+    "name": "Wayanad \u2014 Chaliyar-Meppadi Hill Catchment",
+    "district": "Wayanad",
+    "state": "Kerala",
+    "lat": 11.5542,
+    "lng": 76.1348,
+    "grid_resolution": "1.0 km \u00d7 1.0 km",
+    "elevation_m": 845.0,
+    "slope_deg": 24.5,
+    "lulc_class": "Montane Plantation & Steep Valley",
+    "impervious_pct": 38,
+    "scs_curve_number": 86,
+    "drainage_capacity_mm_hr": 55.0,
+    "drainage_efficiency_pct": 70.0,
+    "topographic_wetness_index": 11.4,
+    "sources": {
+      "insat_3ds_tir_k": 209.8,
+      "insat_3ds_rain_mm_hr": 54.0,
+      "gsmap_isro_mm_hr": 51.5,
+      "imd_dwr_dbz": 49.2,
+      "imd_dwr_rain_mm_hr": 58.6,
+      "aws_gauge_mm_hr": 56.8,
+      "aws_station_id": "AWS-MEPPADI-07",
+      "nwp_ncmrwf_mm_hr": 48.0,
+      "nwp_downscaled_1km_mm_hr": 57.2
+    },
+    "fused_rainfall_mm_hr": 57.4,
+    "accumulated_rain_3h_mm": 142.0,
+    "accumulated_rain_24h_mm": 284.0,
+    "infiltration_loss_mm_hr": 14.2,
+    "surface_runoff_mm_hr": 43.2,
+    "predicted_inundation_depth_m": 0.84,
+    "ensemble_uncertainty_m": 0.14,
+    "confidence_score_pct": 90.4,
+    "alert_color": "ORANGE",
+    "severity_label": "HILLY TORRENT & VALLEY INUNDATION",
+    "lead_time_hrs": 4.5,
+    "hitl_status": "AI_RECOMMENDED_ORANGE",
+    "hitl_officer_note": "KSDMA monitoring Chaliyar headwaters for rapid stream surge and debris-laden runoff.",
+    "affected_population": 34000,
+    "critical_infra_at_risk": [
+      {
+        "asset": "Meppadi\u2013Chooralmala Low Bridge",
+        "depth": "0.84m",
+        "status": "HIGH TORRENT"
+      },
+      {
+        "asset": "SH-29 Ghat Hairpin Section",
+        "depth": "0.45m",
+        "status": "RESTRICTED"
+      },
+      {
+        "asset": "Kalpetta High-Ground Relief Camp",
+        "depth": "0.00m",
+        "status": "OPEN (SAFE)"
+      }
+    ],
+    "recommended_actions": [
+      "Evacuate families within 150m of Chaliyar headwater stream channels",
+      "Restrict heavy commercial traffic on Ghat road curves",
+      "Trigger Malayalam & English IVR alerts via panchayat disaster committees"
+    ],
+    "shap_attribution": {
+      "24h Antecedent Soil Moisture": 39,
+      "Orographic Radar QPE": 28,
+      "Steep Valley Concentration": 18,
+      "NWP Arabian Sea Jet Surge": 10,
+      "Channel Constriction": 5
+    },
+    "hourly_series": {
+      "labels": [
+        "-3h",
+        "-2h",
+        "-1h",
+        "LIVE",
+        "+1h",
+        "+2h",
+        "+3h",
+        "+6h",
+        "+12h",
+        "+18h",
+        "+24h"
+      ],
+      "satellite_gsmap": [
+        20,
+        31,
+        44,
+        54,
+        60,
+        55,
+        44,
+        32,
+        22,
+        16,
+        12
+      ],
+      "radar_dwr": [
+        24,
+        36,
+        49,
+        59,
+        64,
+        58,
+        46,
+        null,
+        null,
+        null,
+        null
+      ],
+      "nwp_model": [
+        18,
+        28,
+        39,
+        48,
+        54,
+        50,
+        40,
+        30,
+        21,
+        15,
+        11
+      ],
+      "fused_ensemble": [
+        22,
+        34,
+        47,
+        57,
+        62,
+        57,
+        45,
+        31,
+        21,
+        15,
+        11
+      ],
+      "uncertainty_upper": [
+        26,
+        39,
+        53,
+        64,
+        70,
+        64,
+        52,
+        37,
+        26,
+        20,
+        16
+      ],
+      "uncertainty_lower": [
+        18,
+        29,
+        41,
+        50,
+        54,
+        50,
+        38,
+        25,
+        16,
+        10,
+        6
+      ]
+    },
+    "inundation_zones": [
+      {
+        "lat": 11.5542,
+        "lng": 76.1348,
+        "radius_m": 1100,
+        "depth_m": 0.84,
+        "zone_name": "Chaliyar Valley Floodplain"
+      }
+    ],
+    "evac_corridor": [
+      [
+        11.5542,
+        76.1348
+      ],
+      [
+        11.582,
+        76.115
+      ],
+      [
+        11.6085,
+        76.085
+      ]
+    ],
+    "blocked_corridor": [
+      [
+        11.5542,
+        76.1348
+      ],
+      [
+        11.531,
+        76.158
+      ]
+    ]
+  },
+  {
+    "id": "GRID-DEL-05",
+    "name": "New Delhi \u2014 Yamuna ITO & Ring Road Floodplain",
+    "district": "Central & East Delhi",
+    "state": "NCT of Delhi",
+    "lat": 28.6289,
+    "lng": 77.2505,
+    "grid_resolution": "1.0 km \u00d7 1.0 km",
+    "elevation_m": 208.5,
+    "slope_deg": 0.9,
+    "lulc_class": "Dense Urban + River Embankment",
+    "impervious_pct": 84,
+    "scs_curve_number": 90,
+    "drainage_capacity_mm_hr": 42.0,
+    "drainage_efficiency_pct": 74.0,
+    "topographic_wetness_index": 13.5,
+    "sources": {
+      "insat_3ds_tir_k": 226.4,
+      "insat_3ds_rain_mm_hr": 28.0,
+      "gsmap_isro_mm_hr": 26.5,
+      "imd_dwr_dbz": 39.5,
+      "imd_dwr_rain_mm_hr": 32.4,
+      "aws_gauge_mm_hr": 31.0,
+      "aws_station_id": "AWS-SAFDARJUNG-01",
+      "nwp_ncmrwf_mm_hr": 29.5,
+      "nwp_downscaled_1km_mm_hr": 31.8
+    },
+    "fused_rainfall_mm_hr": 31.6,
+    "accumulated_rain_3h_mm": 68.0,
+    "accumulated_rain_24h_mm": 112.0,
+    "infiltration_loss_mm_hr": 8.6,
+    "surface_runoff_mm_hr": 23.0,
+    "predicted_inundation_depth_m": 0.36,
+    "ensemble_uncertainty_m": 0.08,
+    "confidence_score_pct": 95.1,
+    "alert_color": "YELLOW",
+    "severity_label": "LOCALIZED WATERLOGGING ADVISORY",
+    "lead_time_hrs": 6.0,
+    "hitl_status": "AI_RECOMMENDED_YELLOW",
+    "hitl_officer_note": "Minto Bridge & ITO Regulator pumps on standby; Yamuna level below warning mark.",
+    "affected_population": 64000,
+    "critical_infra_at_risk": [
+      {
+        "asset": "Minto Road Railway Underpass",
+        "depth": "0.36m",
+        "status": "PUMPS ACTIVE"
+      },
+      {
+        "asset": "ITO Ring Road Regulator",
+        "depth": "0.22m",
+        "status": "MONITORED"
+      },
+      {
+        "asset": "Barapullah Elevated Corridor",
+        "depth": "0.00m",
+        "status": "OPEN (CLEAR)"
+      }
+    ],
+    "recommended_actions": [
+      "Keep automatic sump pumps operational at Minto Bridge & Zakhira underpasses",
+      "Clear storm-drain grating debris along Ring Road Drain No. 12",
+      "Issue commuter traffic advisory via Delhi Traffic Police & Google Maps feed"
+    ],
+    "shap_attribution": {
+      "Urban Imperviousness": 35,
+      "3h Radar+AWS Accumulation": 30,
+      "Underpass Micro-Depression": 22,
+      "Drain No.12 Outfall Level": 9,
+      "NWP Synoptic Trough": 4
+    },
+    "hourly_series": {
+      "labels": [
+        "-3h",
+        "-2h",
+        "-1h",
+        "LIVE",
+        "+1h",
+        "+2h",
+        "+3h",
+        "+6h",
+        "+12h",
+        "+18h",
+        "+24h"
+      ],
+      "satellite_gsmap": [
+        10,
+        16,
+        22,
+        28,
+        30,
+        26,
+        18,
+        12,
+        8,
+        5,
+        3
+      ],
+      "radar_dwr": [
+        12,
+        19,
+        26,
+        32,
+        34,
+        28,
+        20,
+        null,
+        null,
+        null,
+        null
+      ],
+      "nwp_model": [
+        9,
+        15,
+        21,
+        29,
+        31,
+        27,
+        19,
+        14,
+        9,
+        6,
+        4
+      ],
+      "fused_ensemble": [
+        11,
+        18,
+        25,
+        32,
+        33,
+        27,
+        19,
+        13,
+        8,
+        5,
+        3
+      ],
+      "uncertainty_upper": [
+        14,
+        22,
+        29,
+        36,
+        38,
+        32,
+        24,
+        17,
+        12,
+        8,
+        6
+      ],
+      "uncertainty_lower": [
+        8,
+        14,
+        21,
+        28,
+        28,
+        22,
+        14,
+        9,
+        4,
+        2,
+        0
+      ]
+    },
+    "inundation_zones": [
+      {
+        "lat": 28.6289,
+        "lng": 77.2505,
+        "radius_m": 850,
+        "depth_m": 0.36,
+        "zone_name": "ITO & Minto Underpass Corridor"
+      }
+    ],
+    "evac_corridor": [
+      [
+        28.6289,
+        77.2505
+      ],
+      [
+        28.632,
+        77.225
+      ]
+    ],
+    "blocked_corridor": [
+      [
+        28.6289,
+        77.2505
+      ],
+      [
+        28.641,
+        77.232
+      ]
+    ]
+  },
+  {
+    "id": "GRID-KOL-06",
+    "name": "Kolkata \u2014 Bidhannagar & East Wetland Basin",
+    "district": "Kolkata / North 24 Parganas",
+    "state": "West Bengal",
+    "lat": 22.5726,
+    "lng": 88.4159,
+    "grid_resolution": "1.0 km \u00d7 1.0 km",
+    "elevation_m": 5.9,
+    "slope_deg": 0.6,
+    "lulc_class": "Deltaic Urban Flatland (79%)",
+    "impervious_pct": 79,
+    "scs_curve_number": 89,
+    "drainage_capacity_mm_hr": 44.0,
+    "drainage_efficiency_pct": 82.0,
+    "topographic_wetness_index": 14.1,
+    "sources": {
+      "insat_3ds_tir_k": 244.0,
+      "insat_3ds_rain_mm_hr": 12.4,
+      "gsmap_isro_mm_hr": 11.8,
+      "imd_dwr_dbz": 28.0,
+      "imd_dwr_rain_mm_hr": 14.2,
+      "aws_gauge_mm_hr": 13.5,
+      "aws_station_id": "AWS-ALIPORE-01",
+      "nwp_ncmrwf_mm_hr": 15.0,
+      "nwp_downscaled_1km_mm_hr": 13.9
+    },
+    "fused_rainfall_mm_hr": 13.8,
+    "accumulated_rain_3h_mm": 32.0,
+    "accumulated_rain_24h_mm": 54.0,
+    "infiltration_loss_mm_hr": 6.2,
+    "surface_runoff_mm_hr": 7.6,
+    "predicted_inundation_depth_m": 0.08,
+    "ensemble_uncertainty_m": 0.04,
+    "confidence_score_pct": 96.8,
+    "alert_color": "GREEN",
+    "severity_label": "NORMAL DRAINAGE FLOW (NO RISK)",
+    "lead_time_hrs": 12.0,
+    "hitl_status": "VERIFIED_GREEN",
+    "hitl_officer_note": "Bagjola and Kestopur canals operating well below safe capacity.",
+    "affected_population": 12000,
+    "critical_infra_at_risk": [
+      {
+        "asset": "Sector V IT Arterial Ring",
+        "depth": "0.08m",
+        "status": "OPEN (CLEAR)"
+      },
+      {
+        "asset": "Bagjola Outfall Lock Gate",
+        "depth": "0.05m",
+        "status": "OPEN (NORMAL)"
+      },
+      {
+        "asset": "EM Bypass Elevated Corridor",
+        "depth": "0.00m",
+        "status": "OPEN (CLEAR)"
+      }
+    ],
+    "recommended_actions": [
+      "Routine automated telemetry monitoring (15-min cycle) across KMC pumping stations",
+      "Maintain normal lock-gate schedules along Hooghly tidal inlets",
+      "Keep mobile drainage units on routine monsoon standby in Salt Lake Sector V"
+    ],
+    "shap_attribution": {
+      "Canal Outfall Capacity": 42,
+      "Low Radar Reflectivity": 31,
+      "East Kolkata Wetland Buffer": 16,
+      "AWS Ground Calibration": 7,
+      "NWP Stable Pressure": 4
+    },
+    "hourly_series": {
+      "labels": [
+        "-3h",
+        "-2h",
+        "-1h",
+        "LIVE",
+        "+1h",
+        "+2h",
+        "+3h",
+        "+6h",
+        "+12h",
+        "+18h",
+        "+24h"
+      ],
+      "satellite_gsmap": [
+        8,
+        10,
+        12,
+        12,
+        14,
+        15,
+        12,
+        9,
+        6,
+        4,
+        3
+      ],
+      "radar_dwr": [
+        9,
+        11,
+        13,
+        14,
+        16,
+        16,
+        13,
+        null,
+        null,
+        null,
+        null
+      ],
+      "nwp_model": [
+        7,
+        9,
+        12,
+        15,
+        16,
+        15,
+        13,
+        10,
+        7,
+        5,
+        4
+      ],
+      "fused_ensemble": [
+        8,
+        10,
+        13,
+        14,
+        15,
+        15,
+        13,
+        9,
+        6,
+        4,
+        3
+      ],
+      "uncertainty_upper": [
+        11,
+        13,
+        16,
+        17,
+        19,
+        19,
+        17,
+        13,
+        9,
+        7,
+        6
+      ],
+      "uncertainty_lower": [
+        5,
+        7,
+        10,
+        11,
+        11,
+        11,
+        9,
+        5,
+        3,
+        1,
+        0
+      ]
+    },
+    "inundation_zones": [
+      {
+        "lat": 22.5726,
+        "lng": 88.4159,
+        "radius_m": 700,
+        "depth_m": 0.08,
+        "zone_name": "Sector V - Canal Buffer"
+      }
+    ],
+    "evac_corridor": [
+      [
+        22.5726,
+        88.4159
+      ],
+      [
+        22.585,
+        88.405
+      ]
+    ],
+    "blocked_corridor": []
+  }
+]
