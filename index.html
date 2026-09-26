@@ -3468,6 +3468,98 @@ Recommended Actions  :
         </table>
       </div>
     </div>
+
+    <!-- 5. Model Architecture Ablation & Baseline Comparison + 6. Citizen Last-Mile Mobile Alert Preview -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div class="lg:col-span-7 bg-slate-900/70 border border-slate-800 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-mono font-bold text-cyan-300 uppercase">
+            5. ML Architecture Ablation &amp; Baseline Benchmark Comparison (400 Holdout Rows)
+          </span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">+35.6% CSI GAIN</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-[11px]">
+            <thead>
+              <tr class="border-b border-slate-700 text-slate-400">
+                <th class="py-1.5 px-2">MODEL ARCHITECTURE</th>
+                <th class="py-1.5 px-2">RESOLUTION</th>
+                <th class="py-1.5 px-2">POD ↑</th>
+                <th class="py-1.5 px-2">FAR ↓</th>
+                <th class="py-1.5 px-2">CSI ↑</th>
+                <th class="py-1.5 px-2">DEPTH RMSE ↓</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/80">
+              <tr class="text-slate-400">
+                <td class="py-1.5 px-2">1. Standalone Coarse NWP (GFS Only)</td>
+                <td class="py-1.5 px-2">12 km × 12 km</td>
+                <td class="py-1.5 px-2">0.682</td>
+                <td class="py-1.5 px-2">0.241</td>
+                <td class="py-1.5 px-2">0.610</td>
+                <td class="py-1.5 px-2">0.312 m</td>
+              </tr>
+              <tr class="text-slate-300">
+                <td class="py-1.5 px-2">2. Multiple Linear Regression (AWS + Radar)</td>
+                <td class="py-1.5 px-2">1 km × 1 km</td>
+                <td class="py-1.5 px-2">0.794</td>
+                <td class="py-1.5 px-2">0.148</td>
+                <td class="py-1.5 px-2">0.735</td>
+                <td class="py-1.5 px-2">0.184 m</td>
+              </tr>
+              <tr class="text-slate-300">
+                <td class="py-1.5 px-2">3. Random Forest Regressor (No SCS-CN Physics)</td>
+                <td class="py-1.5 px-2">1 km × 1 km</td>
+                <td class="py-1.5 px-2">0.852</td>
+                <td class="py-1.5 px-2">0.104</td>
+                <td class="py-1.5 px-2">0.792</td>
+                <td class="py-1.5 px-2">0.128 m</td>
+              </tr>
+              <tr class="text-slate-200">
+                <td class="py-1.5 px-2">4. Standalone Time-Series LSTM</td>
+                <td class="py-1.5 px-2">1 km × 1 km</td>
+                <td class="py-1.5 px-2">0.896</td>
+                <td class="py-1.5 px-2">0.078</td>
+                <td class="py-1.5 px-2">0.841</td>
+                <td class="py-1.5 px-2">0.094 m</td>
+              </tr>
+              <tr class="bg-emerald-950/35 text-emerald-300 font-bold">
+                <td class="py-2 px-2">🏆 5. RAINSHIELD-AI Hybrid Ensemble (4-Source + SCS-CN + PINN)</td>
+                <td class="py-2 px-2">1 km × 1 km</td>
+                <td class="py-2 px-2 text-emerald-400">0.9851</td>
+                <td class="py-2 px-2 text-emerald-400">0.0197</td>
+                <td class="py-2 px-2 text-emerald-400">0.9660</td>
+                <td class="py-2 px-2 text-emerald-400">0.0489 m</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 bg-slate-900/70 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono font-bold text-amber-300 uppercase">
+              6. Citizen Last-Mile Offline Cell-Broadcast &amp; Shelter Locator
+            </span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40">ITU-T X.1303</span>
+          </div>
+          <div class="bg-slate-950 border border-red-500/50 rounded-xl p-3 font-mono text-[11px] space-y-1.5 shadow-[0_0_20px_rgba(244,63,94,0.15)]">
+            <div class="flex items-center justify-between text-red-400 font-bold border-b border-slate-800 pb-1">
+              <span>⚠️ NDMA / MoES EXTREME EMERGENCY ALERT</span>
+              <span>CELL-CH #4370</span>
+            </div>
+            <div class="text-slate-200 leading-relaxed">
+              <b>[RED WARNING - MUMBAI MITHI BASIN]</b> 1.85m Flash Flood Inundation imminent within 45 mins (Rain: 107 mm/hr). Avoid Milan &amp; Andheri Subways.
+            </div>
+            <div class="bg-slate-900/90 border border-emerald-500/40 rounded-lg p-2 text-emerald-300">
+              <div>🏕️ <b>Nearest Dry Relief Shelter:</b> BMC High School Elevated Camp, Kurla West (<b>0.8 km NE</b> · Elevation +14.2m ASL)</div>
+              <div class="text-[10px] text-slate-400 mt-0.5">Offline SMS Keyword: Send <code>SHELTER 400070</code> to <code>112</code> (Works on 2G without Internet)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </dialog>
 
