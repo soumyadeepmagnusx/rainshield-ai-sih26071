@@ -1,0 +1,40 @@
+{
+  "dataset_name": "IMD-MoES Multi-Modal Heavy Rainfall & 2D Urban Inundation Dataset (2018-2025)",
+  "problem_statement_id": "SIH26071",
+  "organization": "Ministry of Earth Sciences (MoES), Government of India",
+  "spatial_resolution": "1km x 1km Urban Hydrological Grid",
+  "temporal_resolution": "15-minute / 1-hour Synoptic & Nowcast Windows",
+  "training_records_count": 2400,
+  "validation_records_count": 400,
+  "basins_covered": [
+    {"basin_id": "GRID-MUM-01", "name": "Mumbai (Mithi River & Kurla Basin)", "state": "Maharashtra"},
+    {"basin_id": "GRID-CHE-04", "name": "Chennai (Adyar & Velachery Basin)", "state": "Tamil Nadu"},
+    {"basin_id": "GRID-GUW-02", "name": "Guwahati (Bharalu & Anil Nagar Basin)", "state": "Assam"},
+    {"basin_id": "GRID-WAY-03", "name": "Wayanad-Kozhikode (Chaliyar Foothills)", "state": "Kerala"},
+    {"basin_id": "GRID-DEL-05", "name": "New Delhi (Yamuna Floodplain & ITO)", "state": "Delhi NCR"},
+    {"basin_id": "GRID-KOL-06", "name": "Kolkata (Hooghly Tidal & Salt Lake Basin)", "state": "West Bengal"}
+  ],
+  "features": [
+    {"name": "record_id", "type": "string", "description": "Unique observation identifier"},
+    {"name": "timestamp_utc", "type": "datetime", "description": "ISO-8601 observation timestamp"},
+    {"name": "basin_id", "type": "categorical", "description": "1km x 1km target flood grid identifier"},
+    {"name": "synoptic_regime", "type": "categorical", "description": "Monsoon depression, cloudburst, cyclonic landfall, or convective squall"},
+    {"name": "insat_3ds_tir1_bt_k", "type": "float", "unit": "Kelvin", "description": "INSAT-3DS Thermal Infrared-1 (10.8 um) cloud-top brightness temperature (lower K = deeper convection)"},
+    {"name": "gsmap_isro_rain_mm_hr", "type": "float", "unit": "mm/hr", "description": "INSAT-3DS + GSMaP-ISRO satellite microwave-IR rain rate estimate"},
+    {"name": "imd_dwr_reflectivity_dbz", "type": "float", "unit": "dBZ", "description": "IMD S-Band/C-Band Doppler Weather Radar Max-Z column reflectivity"},
+    {"name": "dwr_radial_velocity_m_s", "type": "float", "unit": "m/s", "description": "Doppler radar radial wind convergence velocity"},
+    {"name": "aws_ground_gauge_mm_hr", "type": "float", "unit": "mm/hr", "description": "IMD Automated Weather Station (AWS) / ARG tipping-bucket rain rate"},
+    {"name": "ncmrwf_nwp_1km_mm_hr", "type": "float", "unit": "mm/hr", "description": "IMD GFS / NCMRWF NCUM downscaled 1km numerical weather prediction rain rate"},
+    {"name": "antecedent_rain_3h_mm", "type": "float", "unit": "mm", "description": "Cumulative 3-hour antecedent precipitation prior to t=0"},
+    {"name": "scs_curve_number", "type": "float", "unit": "dimensionless (30-98)", "description": "NRSC/USDA SCS Runoff Curve Number reflecting imperviousness and land use"},
+    {"name": "soil_moisture_saturation_pct", "type": "float", "unit": "%", "description": "Top-layer volumetric soil moisture saturation percentage"},
+    {"name": "dem_elevation_m", "type": "float", "unit": "m ASL", "description": "CartoSAT-1 / LiDAR 1m Digital Elevation Model mean cell elevation"},
+    {"name": "topographic_wetness_index", "type": "float", "unit": "ln(a/tanB)", "description": "DEM-derived Topographic Wetness Index indicating flow accumulation propensity"},
+    {"name": "drainage_efficiency_pct", "type": "float", "unit": "%", "description": "Active municipal storm-water drainage & SCADA pumping capacity"},
+    {"name": "tidal_backwater_level_m", "type": "float", "unit": "m", "description": "Coastal/estuarine tidal stage inducing backwater lock at outfalls"},
+    {"name": "target_fused_rain_mm_hr", "type": "float", "unit": "mm/hr", "description": "Ground-truth gauge-corrected multi-source fused rainfall intensity"},
+    {"name": "target_runoff_mm_hr", "type": "float", "unit": "mm/hr", "description": "Observed/validated SCS-CN direct surface runoff rate"},
+    {"name": "target_inundation_depth_m", "type": "float", "unit": "meters", "description": "Ground-truth peak street-level water depth (AWLR / Sentinel-1 SAR / CCTV gauge)"},
+    {"name": "target_alert_class", "type": "integer", "unit": "0-3", "description": "0=GREEN (<0.25m), 1=YELLOW (0.25-0.60m), 2=ORANGE (0.60-1.15m), 3=RED (>=1.15m)"}
+  ]
+}

@@ -1,0 +1,229 @@
+{
+  "model_name": "RAINSHIELD-AI v6.0 Hybrid GBDT + Ridge Hydrological Surrogate",
+  "problem_statement": "SIH26071",
+  "feature_names": [
+    "insat_3ds_tir1_bt_k",
+    "gsmap_isro_rain_mm_hr",
+    "imd_dwr_reflectivity_dbz",
+    "dwr_radial_velocity_m_s",
+    "aws_ground_gauge_mm_hr",
+    "ncmrwf_nwp_1km_mm_hr",
+    "antecedent_rain_3h_mm",
+    "scs_curve_number",
+    "soil_moisture_saturation_pct",
+    "dem_elevation_m",
+    "topographic_wetness_index",
+    "drainage_efficiency_pct",
+    "tidal_backwater_level_m",
+    "marshall_palmer_radar_rain_mm_hr",
+    "insat_ir_cooling_index",
+    "scs_potential_retention_s_mm",
+    "scs_physics_direct_runoff_mm",
+    "net_hydrological_surplus_mm"
+  ],
+  "means": [
+    244.06347,
+    54.02872,
+    48.18753,
+    21.08927,
+    54.39003,
+    54.16224,
+    93.71188,
+    89.10608,
+    72.88306,
+    176.58333,
+    13.81016,
+    58.19113,
+    1.54691,
+    55.11689,
+    31.05081,
+    31.42269,
+    53.30382,
+    39.10351
+  ],
+  "stds": [
+    25.35636,
+    40.99999,
+    6.86353,
+    10.11317,
+    41.0599,
+    41.51048,
+    78.99992,
+    3.18753,
+    17.77617,
+    279.63664,
+    1.21975,
+    18.91315,
+    1.51668,
+    43.44257,
+    25.20814,
+    10.33465,
+    53.76782,
+    51.78199
+  ],
+  "rain_weights": [
+    -3.37305,
+    4.85596,
+    3.286448,
+    3.175628,
+    5.0315,
+    4.823209,
+    -1.565609,
+    -0.474867,
+    0.149708,
+    -0.143544,
+    0.040887,
+    0.287354,
+    -0.002346,
+    8.555433,
+    3.45885,
+    0.338706,
+    3.887316,
+    3.776507
+  ],
+  "rain_bias": 54.532817,
+  "depth_weights": [
+    -0.03165,
+    0.035551,
+    -0.135437,
+    0.024504,
+    0.042534,
+    0.031005,
+    0.287077,
+    -0.009261,
+    -0.034129,
+    0.019165,
+    0.024772,
+    -0.039951,
+    0.159982,
+    0.098943,
+    0.03446,
+    0.024867,
+    0.194022,
+    0.323041
+  ],
+  "depth_bias": 1.032293,
+  "boosted_stumps_depth": [
+    {
+      "feature_idx": 12,
+      "threshold": 1.2,
+      "left_val": -0.002517,
+      "right_val": 0.011434
+    },
+    {
+      "feature_idx": 1,
+      "threshold": -0.6,
+      "left_val": 0.006321,
+      "right_val": -0.00341
+    },
+    {
+      "feature_idx": 12,
+      "threshold": 1.8,
+      "left_val": -0.000901,
+      "right_val": 0.01743
+    },
+    {
+      "feature_idx": 12,
+      "threshold": -0.2,
+      "left_val": 0.003799,
+      "right_val": -0.00396
+    },
+    {
+      "feature_idx": 7,
+      "threshold": 1.2,
+      "left_val": -0.001482,
+      "right_val": 0.010823
+    },
+    {
+      "feature_idx": 12,
+      "threshold": 1.2,
+      "left_val": -0.001727,
+      "right_val": 0.007846
+    },
+    {
+      "feature_idx": 12,
+      "threshold": -0.2,
+      "left_val": 0.003605,
+      "right_val": -0.003759
+    },
+    {
+      "feature_idx": 1,
+      "threshold": -0.6,
+      "left_val": 0.004824,
+      "right_val": -0.002602
+    },
+    {
+      "feature_idx": 8,
+      "threshold": 0.6,
+      "left_val": -0.002668,
+      "right_val": 0.005103
+    },
+    {
+      "feature_idx": 13,
+      "threshold": -1.2,
+      "left_val": -0.02946,
+      "right_val": 0.000436
+    },
+    {
+      "feature_idx": 4,
+      "threshold": -0.6,
+      "left_val": 0.004484,
+      "right_val": -0.002455
+    },
+    {
+      "feature_idx": 7,
+      "threshold": 1.2,
+      "left_val": -0.001163,
+      "right_val": 0.008494
+    },
+    {
+      "feature_idx": 4,
+      "threshold": -1.2,
+      "left_val": -0.014708,
+      "right_val": 0.00062
+    },
+    {
+      "feature_idx": 11,
+      "threshold": 1.2,
+      "left_val": -0.001134,
+      "right_val": 0.008026
+    },
+    {
+      "feature_idx": 12,
+      "threshold": 1.2,
+      "left_val": -0.001397,
+      "right_val": 0.006344
+    },
+    {
+      "feature_idx": 12,
+      "threshold": -0.2,
+      "left_val": 0.003281,
+      "right_val": -0.003421
+    },
+    {
+      "feature_idx": 8,
+      "threshold": 0.6,
+      "left_val": -0.002044,
+      "right_val": 0.00391
+    },
+    {
+      "feature_idx": 1,
+      "threshold": -0.6,
+      "left_val": 0.003848,
+      "right_val": -0.002075
+    },
+    {
+      "feature_idx": 11,
+      "threshold": -0.6,
+      "left_val": 0.003887,
+      "right_val": -0.001798
+    },
+    {
+      "feature_idx": 12,
+      "threshold": 1.2,
+      "left_val": -0.001241,
+      "right_val": 0.005639
+    }
+  ],
+  "is_trained": true
+}

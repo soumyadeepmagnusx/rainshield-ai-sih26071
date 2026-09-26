@@ -1,0 +1,104 @@
+{
+  "run_id": "TRN-SIH26071-1790441032",
+  "timestamp_utc": "2026-09-26T16:43:52.165950+00:00",
+  "training_duration_ms": 9244.7,
+  "problem_statement_id": "SIH26071",
+  "model_architecture": "Hybrid Multi-Modal Ridge Hydrological Regressor + 20-Stage Gradient Boosted Decision Stumps",
+  "training_dataset": {
+    "filename": "ml_pipeline/datasets/imd_moes_multimodal_flood_training_2018_2025.csv",
+    "records": 2400,
+    "features_count": 18,
+    "basins": [
+      "GRID-MUM-01",
+      "GRID-CHE-04",
+      "GRID-GUW-02",
+      "GRID-WAY-03",
+      "GRID-DEL-05",
+      "GRID-KOL-06"
+    ]
+  },
+  "validation_dataset": {
+    "filename": "ml_pipeline/datasets/historical_flood_validation_benchmarks.csv",
+    "records": 400
+  },
+  "training_metrics": {
+    "samples_evaluated": 2400,
+    "rainfall_rmse_mm_hr": 1.656,
+    "rainfall_mae_mm_hr": 1.286,
+    "inundation_depth_rmse_m": 0.0614,
+    "inundation_depth_mae_m": 0.0493,
+    "inundation_r2_score": 0.996,
+    "multiclass_accuracy_pct": 89.62,
+    "probability_of_detection_pod": 0.9789,
+    "false_alarm_ratio_far": 0.0322,
+    "critical_success_index_csi": 0.948,
+    "brier_skill_score": 0.0333,
+    "contingency_matrix": {
+      "hits": 1204,
+      "false_alarms": 40,
+      "misses": 26,
+      "correct_negatives": 1130
+    }
+  },
+  "validation_metrics": {
+    "samples_evaluated": 400,
+    "rainfall_rmse_mm_hr": 1.724,
+    "rainfall_mae_mm_hr": 1.341,
+    "inundation_depth_rmse_m": 0.063,
+    "inundation_depth_mae_m": 0.0497,
+    "inundation_r2_score": 0.996,
+    "multiclass_accuracy_pct": 90.75,
+    "probability_of_detection_pod": 0.9851,
+    "false_alarm_ratio_far": 0.0197,
+    "critical_success_index_csi": 0.966,
+    "brier_skill_score": 0.0288,
+    "contingency_matrix": {
+      "hits": 199,
+      "false_alarms": 4,
+      "misses": 3,
+      "correct_negatives": 194
+    }
+  },
+  "top_shap_features": [
+    {
+      "feature": "net_hydrological_surplus_mm",
+      "importance_pct": 17.4,
+      "linear_weight": 0.32304
+    },
+    {
+      "feature": "antecedent_rain_3h_mm",
+      "importance_pct": 15.46,
+      "linear_weight": 0.28708
+    },
+    {
+      "feature": "tidal_backwater_level_m",
+      "importance_pct": 14.94,
+      "linear_weight": 0.15998
+    },
+    {
+      "feature": "scs_physics_direct_runoff_mm",
+      "importance_pct": 10.45,
+      "linear_weight": 0.19402
+    },
+    {
+      "feature": "marshall_palmer_radar_rain_mm_hr",
+      "importance_pct": 7.75,
+      "linear_weight": 0.09894
+    },
+    {
+      "feature": "imd_dwr_reflectivity_dbz",
+      "importance_pct": 7.3,
+      "linear_weight": -0.13544
+    },
+    {
+      "feature": "aws_ground_gauge_mm_hr",
+      "importance_pct": 4.09,
+      "linear_weight": 0.04253
+    },
+    {
+      "feature": "gsmap_isro_rain_mm_hr",
+      "importance_pct": 3.78,
+      "linear_weight": 0.03555
+    }
+  ]
+}

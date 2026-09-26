@@ -1,0 +1,96 @@
+{
+  "run_id": "TRN-SIH26071-1790441032",
+  "timestamp_utc": "2026-09-26T16:43:52.165950+00:00",
+  "shap_ranking": [
+    {
+      "feature": "net_hydrological_surplus_mm",
+      "importance_pct": 17.4,
+      "linear_weight": 0.32304
+    },
+    {
+      "feature": "antecedent_rain_3h_mm",
+      "importance_pct": 15.46,
+      "linear_weight": 0.28708
+    },
+    {
+      "feature": "tidal_backwater_level_m",
+      "importance_pct": 14.94,
+      "linear_weight": 0.15998
+    },
+    {
+      "feature": "scs_physics_direct_runoff_mm",
+      "importance_pct": 10.45,
+      "linear_weight": 0.19402
+    },
+    {
+      "feature": "marshall_palmer_radar_rain_mm_hr",
+      "importance_pct": 7.75,
+      "linear_weight": 0.09894
+    },
+    {
+      "feature": "imd_dwr_reflectivity_dbz",
+      "importance_pct": 7.3,
+      "linear_weight": -0.13544
+    },
+    {
+      "feature": "aws_ground_gauge_mm_hr",
+      "importance_pct": 4.09,
+      "linear_weight": 0.04253
+    },
+    {
+      "feature": "gsmap_isro_rain_mm_hr",
+      "importance_pct": 3.78,
+      "linear_weight": 0.03555
+    },
+    {
+      "feature": "drainage_efficiency_pct",
+      "importance_pct": 3.35,
+      "linear_weight": -0.03995
+    },
+    {
+      "feature": "soil_moisture_saturation_pct",
+      "importance_pct": 2.95,
+      "linear_weight": -0.03413
+    },
+    {
+      "feature": "scs_curve_number",
+      "importance_pct": 2.27,
+      "linear_weight": -0.00926
+    },
+    {
+      "feature": "insat_ir_cooling_index",
+      "importance_pct": 1.86,
+      "linear_weight": 0.03446
+    },
+    {
+      "feature": "insat_3ds_tir1_bt_k",
+      "importance_pct": 1.7,
+      "linear_weight": -0.03165
+    },
+    {
+      "feature": "ncmrwf_nwp_1km_mm_hr",
+      "importance_pct": 1.67,
+      "linear_weight": 0.031
+    },
+    {
+      "feature": "scs_potential_retention_s_mm",
+      "importance_pct": 1.34,
+      "linear_weight": 0.02487
+    },
+    {
+      "feature": "topographic_wetness_index",
+      "importance_pct": 1.33,
+      "linear_weight": 0.02477
+    },
+    {
+      "feature": "dwr_radial_velocity_m_s",
+      "importance_pct": 1.32,
+      "linear_weight": 0.0245
+    },
+    {
+      "feature": "dem_elevation_m",
+      "importance_pct": 1.03,
+      "linear_weight": 0.01917
+    }
+  ]
+}
