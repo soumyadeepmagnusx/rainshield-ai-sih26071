@@ -8,6 +8,7 @@ Verifies:
 2. Hybrid Ridge + Gradient Boosted Stump ML model accuracy (R2 >= 0.98, CSI >= 0.90)
 3. SQLite3 Relational Database (`rainshield_moes.db`) 7-table integrity
 4. SCS-CN Hydrological Physics & ITU-T X.1303 / NDMA CAP v1.2 XML compliance
+5. 2D Shallow-Water PINN PDE continuity residual & Live Meteorological Ingestion Adapter
 """
 import os
 import unittest
@@ -15,7 +16,9 @@ import unittest
 from backend.config.settings import AppConfig
 from backend.database.db_manager import db_instance
 from backend.services.hydro_physics_service import hydro_service
+from backend.services.imd_mosaic_ingestor import imd_ingestor
 from backend.services.ml_inference_service import ml_service
+from ml_pipeline.models.convlstm_gnn_pinn import compute_shallow_water_pinn_residual
 
 
 class TestRainshieldSIH26071(unittest.TestCase):
@@ -64,6 +67,22 @@ class TestRainshieldSIH26071(unittest.TestCase):
         xml_out = hydro_service.generate_cap_xml(grids[0])
         self.assertIn("urn:oasis:names:tc:emergency:cap:1.2", xml_out)
         self.assertIn("SIH26071", xml_out)
+
+    def test_05_pinn_shallow_water_pde_and_live_ingestor(self) -> None:
+        pinn = compute_shallow_water_pinn_residual(
+            h_prev_m=1.42,
+            h_pred_m=1.85,
+            dt_hr=1.0,
+            fused_rain_mm_hr=107.0,
+            scs_infiltration_mm_hr=16.5,
+            scada_drainage_mm_hr=42.0
+        )
+        self.assertTrue(pinn["mass_conservation_satisfied"])
+        self.assertGreater(pinn["manning_velocity_m_s"], 0.0)
+
+        live_scan = imd_ingestor.fetch_live_synoptic_telemetry(lat=19.0728, lon=72.8826, scs_cn=94.0)
+        self.assertEqual(live_scan["status"], "ok")
+        self.assertIn("inferred_imd_dwr_dbz", live_scan["live_meteorology"])
 
 
 if __name__ == "__main__":
