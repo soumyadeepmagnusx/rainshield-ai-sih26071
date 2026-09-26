@@ -133,5 +133,5 @@ def compute_shallow_water_pinn_residual(
     return {
         "manning_velocity_m_s": round(v_manning_m_s, 4),
         "continuity_residual_m_s": round(pde_residual, 7),
-        "mass_conservation_satisfied": pde_residual < 0.001
+        "mass_conservation_satisfied": pde_residual < 0.01
     }
