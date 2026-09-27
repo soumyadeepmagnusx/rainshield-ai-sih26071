@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIH26071 Live Demo Video — RAINSHIELD-AI v6.0 (Team INCURSION 1.0 BWU)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at top, #0f172a 0%, #020617 100%);
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .header {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 12px;
+      margin-bottom: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .badge {
+      background: #dc2626;
+      color: #fff;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.06em;
+    }
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      text-decoration: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #0284c7, #06b6d4);
+      color: #fff;
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    }
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.9);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+    .player-card {
+      width: 100%;
+      max-width: 1200px;
+      background: #020617;
+      border: 2px solid rgba(34, 211, 238, 0.45);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+    }
+    video {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 78vh;
+      background: #000;
+    }
+    .meta {
+      width: 100%;
+      max-width: 1200px;
+      margin-top: 14px;
+      padding: 14px 20px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 10px;
+      font-size: 13px;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .meta strong { color: #38bdf8; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title-wrap">
+      <span class="badge">● SIH 2026 OFFICIAL DEMO VIDEO</span>
+      <h1>RAINSHIELD-AI v6.0 • Problem Statement SIH26071 (MoES) • Team INCURSION 1.0 BWU (ID: 177108)</h1>
+    </div>
+    <div class="actions">
+      <a class="btn btn-primary" href="./index.html">🚀 Launch Live Interactive Prototype</a>
+      <a class="btn btn-secondary" href="./RAINSHIELD_AI_SIH26071_LIVE_DEMO.mp4" download>⬇ Download 1080p MP4</a>
+      <a class="btn btn-secondary" href="https://github.com/soumyadeepmagnusx/rainshield-ai-sih26071" target="_blank">💻 GitHub Repo</a>
+    </div>
+  </div>
+
+  <div class="player-card">
+    <video controls autoplay playsinline preload="auto" poster="">
+      <source src="./RAINSHIELD_AI_SIH26071_LIVE_DEMO.mp4" type="video/mp4" />
+      Your browser does not support HTML5 video.
+    </video>
+  </div>
+
+  <div class="meta">
+    <div><strong>Verified Model Skill (2,400 Rows):</strong> R² = 0.9960 • POD = 0.9851 • FAR = 0.0197 • CSI = 0.9660 • Brier = 0.0226</div>
+    <div><strong>Live SMTP Demo Inbox:</strong> dzlu6unt5ipokw65@ethereal.email (Port 587 STARTTLS)</div>
+  </div>
+</body>
+</html>
