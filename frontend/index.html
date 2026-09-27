@@ -229,6 +229,9 @@ tailwind.config = {
   .leaflet-popup-tip {
     background: rgba(15, 23, 42, 0.95) !important;
   }
+  .cyber-dark-tiles {
+    filter: invert(100%) hue-rotate(185deg) brightness(90%) contrast(95%) saturate(85%);
+  }
 </style>
 </head>
 <body class="bg-slate-950 text-slate-50 min-h-screen flex flex-col selection:bg-cyan-500/30">
@@ -449,8 +452,8 @@ tailwind.config = {
 
         <!-- Base Map Cartography Selector -->
         <select id="baseMapSelect" onchange="switchBaseTile(this.value)" class="px-2.5 py-1.5 rounded-lg bg-slate-950/90 border border-slate-800 text-cyan-300 font-mono text-[10px] focus:outline-none">
+          <option value="sat" selected>MAP: HIGH-RES EO SATELLITE</option>
           <option value="dark">MAP: CYBER DARK TACTICAL</option>
-          <option value="sat">MAP: HIGH-RES EO SATELLITE</option>
           <option value="topo">MAP: CARTODEM 10M RELIEF</option>
         </select>
       </div>
@@ -1879,12 +1882,8 @@ function initLeafletWorkstation() {
     zoomControl: false
   });
 
-  const defaultTileUrl = window.location.protocol === 'file:'
-    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-  tileLayerInstance = L.tileLayer(defaultTileUrl, {
-    maxZoom: 19,
-    subdomains: 'abcd'
+  tileLayerInstance = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19
   }).addTo(map);
 
   polyLayer = L.layerGroup().addTo(map);
@@ -1926,11 +1925,13 @@ function switchBaseTile(mode) {
   if (!map) return;
   if (tileLayerInstance) map.removeLayer(tileLayerInstance);
   const urls = {
-    dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
     sat: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    dark: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     topo: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png'
   };
-  tileLayerInstance = L.tileLayer(urls[mode] || urls.dark, { maxZoom: 19 }).addTo(map);
+  const opts = { maxZoom: 19 };
+  if (mode === 'dark') opts.className = 'cyber-dark-tiles';
+  tileLayerInstance = L.tileLayer(urls[mode] || urls.sat, opts).addTo(map);
 }
 
 function sevHex(c) {
