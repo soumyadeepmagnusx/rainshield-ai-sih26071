@@ -742,7 +742,7 @@ tailwind.config = {
             <span>RAIN (P)</span>
             <b id="valSliderRain" class="text-cyan-300">79.4</b>
           </div>
-          <input type="range" id="sliderRain" min="5" max="140" step="0.5" value="79.4" oninput="updateHydroPhysics()" class="w-full accent-cyan-400 h-1 cursor-pointer">
+          <input type="range" id="sliderRain" min="5" max="300" step="0.5" value="79.4" oninput="updateHydroPhysics()" class="w-full accent-cyan-400 h-1 cursor-pointer">
         </div>
         <div class="bg-slate-950/70 p-2 rounded border border-slate-800">
           <div class="flex justify-between text-slate-400 mb-1">
@@ -1879,7 +1879,10 @@ function initLeafletWorkstation() {
     zoomControl: false
   });
 
-  tileLayerInstance = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  const defaultTileUrl = window.location.protocol === 'file:'
+    ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  tileLayerInstance = L.tileLayer(defaultTileUrl, {
     maxZoom: 19,
     subdomains: 'abcd'
   }).addTo(map);
@@ -3025,14 +3028,14 @@ function refreshCharts() {
 
 // ==================== CLOUDBURST, LIVE API, COPILOT & MODALS ====================
 async function triggerExtremeCloudburst() {
-  const burstRain = 112.0;
+  const burstRain = 300.0;
   document.getElementById('sliderRain').value = burstRain;
-  document.getElementById('sliderDrain').value = 40;
-  activeGrid.sources.insat_3ds_tir_k = 191.8;
-  activeGrid.sources.imd_dwr_dbz = 62.0;
-  activeGrid.sources.imd_dwr_rain_mm_hr = 118.4;
-  activeGrid.sources.aws_gauge_mm_hr = 109.5;
-  activeGrid.hitl_status = "AI_ESCALATED_RED [CLOUDBURST]";
+  document.getElementById('sliderDrain').value = 35;
+  activeGrid.sources.insat_3ds_tir_k = 186.4;
+  activeGrid.sources.imd_dwr_dbz = 64.5;
+  activeGrid.sources.imd_dwr_rain_mm_hr = 300.0;
+  activeGrid.sources.aws_gauge_mm_hr = 294.5;
+  activeGrid.hitl_status = "AI_ESCALATED_RED [300 MM/HR CLOUDBURST]";
   updateHydroPhysics();
 
   try {
